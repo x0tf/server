@@ -9,8 +9,8 @@ type Namespace struct {
 
 // NamespaceService represents a namespace database service
 type NamespaceService interface {
-	Namespace(id string) (*Namespace, error)
+	Namespace(string) (*Namespace, error)
 	Namespaces() ([]*Namespace, error)
-	CreateOrReplace(namespace *Namespace) error
-	Delete(id string)
+	CreateOrReplace(*Namespace) error
+	Delete(string) error
 }

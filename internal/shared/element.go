@@ -18,9 +18,9 @@ type Element struct {
 
 // ElementService represents an element database service
 type ElementService interface {
-	Element(namespace, key string) (*Element, error)
+	Element(string, string) (*Element, error)
 	Elements() ([]*Element, error)
-	ElementsInNamespace(namespace, key string) ([]*Element, error)
-	CreateOrReplace(element *Element) error
-	Delete(namespace, key string) error
+	ElementsInNamespace(string) ([]*Element, error)
+	CreateOrReplace(*Element) error
+	Delete(string, string) error
 }

@@ -1,9 +1,13 @@
 package main
 
 import (
+	"github.com/x0tf/server/internal/api"
 	"github.com/x0tf/server/internal/config"
 	"github.com/x0tf/server/internal/database/postgres"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -18,12 +22,27 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer namespaces.Close()
 
 	// Initialize the element service
 	elements, err := postgres.NewElementService(cfg.DatabaseDSN)
 	if err != nil {
 		panic(err)
 	}
+	defer elements.Close()
 
-	// TODO: Implement startup logic
+	// Start up the REST API
+	restApi := &api.API{
+		Address:    cfg.APIAddress,
+		Namespaces: namespaces,
+		Elements:   elements,
+	}
+	go func() {
+		panic(restApi.Serve())
+	}()
+
+	// Wait for the program to exit
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	<-sc
 }

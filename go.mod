@@ -3,6 +3,7 @@ module github.com/x0tf/server
 go 1.15
 
 require (
+	github.com/gofiber/fiber/v2 v2.3.3
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/jackc/pgx/v4 v4.10.1
 	github.com/joho/godotenv v1.3.0
