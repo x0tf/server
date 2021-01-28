@@ -7,7 +7,7 @@ type Namespace struct {
 	Active bool
 }
 
-// NamespaceService represents a namespace storage service
+// NamespaceService represents a namespace database service
 type NamespaceService interface {
 	Namespace(id string) (*Namespace, error)
 	Namespaces() ([]*Namespace, error)

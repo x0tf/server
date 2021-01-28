@@ -16,7 +16,7 @@ type Element struct {
 	Data      string
 }
 
-// ElementService represents an element storage service
+// ElementService represents an element database service
 type ElementService interface {
 	Element(namespace, key string) (*Element, error)
 	Elements() ([]*Element, error)

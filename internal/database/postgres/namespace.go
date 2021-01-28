@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/x0tf/server/internal/shared"
 	"github.com/x0tf/server/internal/static"
@@ -43,19 +44,12 @@ func (service *NamespaceService) InitializeTable() error {
 
 // Namespace searches for a namespace by its ID
 func (service *NamespaceService) Namespace(sourceID string) (*shared.Namespace, error) {
-	var id string
-	var token string
-	var active bool
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", static.PostgresTableNamespaces)
-	err := service.pool.QueryRow(context.Background(), query, sourceID).Scan(&id, &token, &active)
+	namespace, err := rowToNamespace(service.pool.QueryRow(context.Background(), query, sourceID))
 	if err != nil {
 		return nil, err
 	}
-	return &shared.Namespace{
-		ID:     id,
-		Token:  token,
-		Active: active,
-	}, err
+	return namespace, nil
 }
 
 // Namespaces searches for all existent namespaces
@@ -68,9 +62,12 @@ func (service *NamespaceService) Namespaces() ([]*shared.Namespace, error) {
 	defer rows.Close()
 
 	var namespaces []*shared.Namespace
-	err = rows.Scan(namespaces)
-	if err != nil {
-		return nil, err
+	for rows.Next() {
+		namespace, err := rowToNamespace(rows)
+		if err != nil {
+			return nil, err
+		}
+		namespaces = append(namespaces, namespace)
 	}
 	return namespaces, nil
 }
@@ -98,4 +95,22 @@ func (service *NamespaceService) Delete(id string) error {
 // Close closes the postgres namespace service
 func (service *NamespaceService) Close() {
 	service.pool.Close()
+}
+
+// rowToNamespace creates a namespace from a postgres row
+func rowToNamespace(row pgx.Row) (*shared.Namespace, error) {
+	var id string
+	var token string
+	var active bool
+
+	err := row.Scan(&id, &token, &active)
+	if err != nil {
+		return nil, err
+	}
+
+	return &shared.Namespace{
+		ID:     id,
+		Token:  token,
+		Active: active,
+	}, nil
 }
