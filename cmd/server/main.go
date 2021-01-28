@@ -4,6 +4,7 @@ import (
 	"github.com/x0tf/server/internal/api"
 	"github.com/x0tf/server/internal/config"
 	"github.com/x0tf/server/internal/database/postgres"
+	"github.com/x0tf/server/internal/static"
 	"log"
 	"os"
 	"os/signal"
@@ -34,6 +35,8 @@ func main() {
 	// Start up the REST API
 	restApi := &api.API{
 		Address:    cfg.APIAddress,
+		Production: static.ApplicationMode == "PROD",
+		Version:    static.ApplicationVersion,
 		Namespaces: namespaces,
 		Elements:   elements,
 	}
