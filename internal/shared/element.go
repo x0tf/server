@@ -21,6 +21,6 @@ type ElementService interface {
 	Element(namespace, key string) (*Element, error)
 	Elements() ([]*Element, error)
 	ElementsInNamespace(namespace, key string) ([]*Element, error)
-	Create(element *Element) error
+	CreateOrReplace(element *Element) error
 	Delete(namespace, key string) error
 }

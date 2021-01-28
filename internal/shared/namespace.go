@@ -11,6 +11,6 @@ type Namespace struct {
 type NamespaceService interface {
 	Namespace(id string) (*Namespace, error)
 	Namespaces() ([]*Namespace, error)
-	Create(namespace *Namespace) error
+	CreateOrReplace(namespace *Namespace) error
 	Delete(id string)
 }
