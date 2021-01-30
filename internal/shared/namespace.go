@@ -2,9 +2,9 @@ package shared
 
 // Namespace represents a namespace
 type Namespace struct {
-	ID     string
-	Token  string
-	Active bool
+	ID     string `json:"id"`
+	Token  string `json:"token,omitempty"`
+	Active bool   `json:"active"`
 }
 
 // NamespaceService represents a namespace database service

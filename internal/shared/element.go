@@ -10,10 +10,10 @@ const (
 
 // Element represents an element published on the service
 type Element struct {
-	Namespace string
-	Key       string
-	Type      ElementType
-	Data      string
+	Namespace string      `json:"namespace"`
+	Key       string      `json:"key"`
+	Type      ElementType `json:"type"`
+	Data      string      `json:"data"`
 }
 
 // ElementService represents an element database service

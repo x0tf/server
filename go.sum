@@ -1,4 +1,6 @@
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/alexedwards/argon2id v0.0.0-20201228115903-cf543ebc1f7b h1:jEg+fE+POnmUy40B+aSKEPqZDmsdl55hZU0YKXEzz1k=
+github.com/alexedwards/argon2id v0.0.0-20201228115903-cf543ebc1f7b/go.mod h1:Kmn5t2Rb93Q4NTprN4+CCgARGvigKMJyxP0WckpTUp0=
 github.com/andybalholm/brotli v1.0.0 h1:7UCwP93aiSfvWpapti8g88vVVGp2qqtGyePsSuDafo4=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=

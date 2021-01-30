@@ -6,7 +6,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/x0tf/server/internal/shared"
-	"github.com/x0tf/server/internal/static"
 )
 
 // NamespaceService represents the postgres namespace service
@@ -37,14 +36,14 @@ func (service *NamespaceService) InitializeTable() error {
 			active BOOLEAN NOT NULL,
 			PRIMARY KEY (id)
 		)
-    `, static.PostgresTableNamespaces)
+    `, tableNamespaces)
 	_, err := service.pool.Exec(context.Background(), query)
 	return err
 }
 
 // Namespace searches for a namespace by its ID
 func (service *NamespaceService) Namespace(sourceID string) (*shared.Namespace, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", static.PostgresTableNamespaces)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", tableNamespaces)
 	namespace, err := rowToNamespace(service.pool.QueryRow(context.Background(), query, sourceID))
 	if err != nil {
 		return nil, err
@@ -54,7 +53,7 @@ func (service *NamespaceService) Namespace(sourceID string) (*shared.Namespace, 
 
 // Namespaces searches for all existent namespaces
 func (service *NamespaceService) Namespaces() ([]*shared.Namespace, error) {
-	query := fmt.Sprintf("SELECT * FROM %s", static.PostgresTableNamespaces)
+	query := fmt.Sprintf("SELECT * FROM %s", tableNamespaces)
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
@@ -80,14 +79,14 @@ func (service *NamespaceService) CreateOrReplace(namespace *shared.Namespace) er
 		ON CONFLICT (id) DO UPDATE
 			SET token = excluded.token,
 				active = excluded.active
-    `, static.PostgresTableNamespaces)
+    `, tableNamespaces)
 	_, err := service.pool.Exec(context.Background(), query, namespace.ID, namespace.Token, namespace.Active)
 	return err
 }
 
 // Delete deletes a namespace
 func (service *NamespaceService) Delete(id string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", static.PostgresTableNamespaces)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id = $1", tableNamespaces)
 	_, err := service.pool.Exec(context.Background(), query, id)
 	return err
 }

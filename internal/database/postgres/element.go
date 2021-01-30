@@ -6,7 +6,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/x0tf/server/internal/shared"
-	"github.com/x0tf/server/internal/static"
 )
 
 // ElementService represents the postgres element service
@@ -38,14 +37,14 @@ func (service *ElementService) InitializeTable() error {
 			data TEXT NOT NULL,
 			PRIMARY KEY (namespace, key)
 		)
-    `, static.PostgresTableElements)
+    `, tableElements)
 	_, err := service.pool.Exec(context.Background(), query)
 	return err
 }
 
 // Element searches for a single element with a specific key in a specific namespace
 func (service *ElementService) Element(sourceNamespace, sourceKey string) (*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1 AND key = $2", static.PostgresTableElements)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1 AND key = $2", tableElements)
 	element, err := rowToElement(service.pool.QueryRow(context.Background(), query, sourceNamespace, sourceKey))
 	if err != nil {
 		return nil, err
@@ -55,7 +54,7 @@ func (service *ElementService) Element(sourceNamespace, sourceKey string) (*shar
 
 // Elements searches for all elements
 func (service *ElementService) Elements() ([]*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM %s", static.PostgresTableElements)
+	query := fmt.Sprintf("SELECT * FROM %s", tableElements)
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {
 		return nil, err
@@ -75,7 +74,7 @@ func (service *ElementService) Elements() ([]*shared.Element, error) {
 
 // ElementsInNamespace searches for all elements in a specific namespace
 func (service *ElementService) ElementsInNamespace(namespace string) ([]*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1", static.PostgresTableElements)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1", tableElements)
 	rows, err := service.pool.Query(context.Background(), query, namespace)
 	if err != nil {
 		return nil, err
@@ -101,14 +100,14 @@ func (service *ElementService) CreateOrReplace(element *shared.Element) error {
 		ON CONFLICT (namespace, key) DO UPDATE
 			SET type = excluded.type,
 				data = excluded.data
-    `, static.PostgresTableElements)
+    `, tableElements)
 	_, err := service.pool.Exec(context.Background(), query, element.Namespace, element.Key, element.Type, element.Data)
 	return err
 }
 
 // Delete deletes an element
 func (service *ElementService) Delete(namespace, key string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE namespace = $1 AND key = $2", static.PostgresTableElements)
+	query := fmt.Sprintf("DELETE FROM %s WHERE namespace = $1 AND key = $2", tableElements)
 	_, err := service.pool.Exec(context.Background(), query, namespace, key)
 	return err
 }

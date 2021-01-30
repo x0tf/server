@@ -56,7 +56,10 @@ func (api *API) Serve() error {
 
 	// Route the v1 API endpoints
 	v1router := app.Group("/v1")
-	v1router.Get("/info", v1.EndpointGetInfo)
+	{
+		v1router.Get("/info", v1.EndpointGetInfo)
+		v1router.Post("/namespaces/:namespace", v1.EndpointCreateNamespace)
+	}
 
 	return app.Listen(api.Address)
 }
