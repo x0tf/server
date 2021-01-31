@@ -9,5 +9,6 @@ func EndpointGetInfo(ctx *fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{
 		"production": ctx.Locals("__production").(bool),
 		"version":    ctx.Locals("__version").(string),
+		"invites":    ctx.Locals("__invites") != nil,
 	})
 }

@@ -52,6 +52,7 @@ func main() {
 	}
 
 	// Start up the REST API
+	log.Println(invites)
 	restApi := &api.API{
 		Address:    cfg.APIAddress,
 		Production: static.ApplicationMode == "PROD",
@@ -59,6 +60,9 @@ func main() {
 		Namespaces: namespaces,
 		Elements:   elements,
 		Invites:    invites,
+	}
+	if invites == nil {
+		restApi.Invites = nil
 	}
 	go func() {
 		panic(restApi.Serve())

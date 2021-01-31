@@ -39,7 +39,7 @@ func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
 // EndpointCreateNamespace handles the POST /v1/namespaces/:namespace endpoint
 func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Check if the user has to provide an invite code
-	invites := ctx.Locals("__invites").(shared.InviteService)
+	invites, _ := ctx.Locals("__invites").(shared.InviteService)
 	var usedInvite string
 	if invites != nil {
 		// Parse the JSON body into a map
