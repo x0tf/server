@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/x0tf/server/internal/shared"
 	"github.com/x0tf/server/internal/token"
+	"github.com/x0tf/server/internal/utils"
 	"github.com/x0tf/server/internal/validation"
 )
 
@@ -86,7 +87,7 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Create a new namespace and a copy of it
 	namespace := &shared.Namespace{
 		ID:     id,
-		Token:  token.Generate(),
+		Token:  utils.GenerateToken(),
 		Active: true,
 	}
 	namespaceCopy := *namespace
@@ -115,7 +116,7 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 // EndpointResetNamespaceToken handles the POST /v1/namespaces/:namespace/resetToken endpoint
 func EndpointResetNamespaceToken(ctx *fiber.Ctx) error {
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
-	newToken := token.Generate()
+	newToken := utils.GenerateToken()
 	hash, err := token.Hash(newToken)
 	if err != nil {
 		return err

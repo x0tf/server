@@ -6,6 +6,9 @@ type ElementType int
 const (
 	// ElementTypePaste represents the element type for a paste
 	ElementTypePaste = ElementType(0)
+
+	// ElementTypeRedirect represents the element type for a redirect
+	ElementTypeRedirect = ElementType(1)
 )
 
 // Element represents an element published on the service

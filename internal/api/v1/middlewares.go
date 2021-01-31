@@ -10,7 +10,7 @@ import (
 // MiddlewareInjectNamespace injects the requested namespace if it exists
 func MiddlewareInjectNamespace(ctx *fiber.Ctx) error {
 	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
-	namespace, err := namespaces.Namespace(ctx.Params("namespace"))
+	namespace, err := namespaces.Namespace(strings.ToLower(ctx.Params("namespace")))
 	if err != nil {
 		return err
 	}

@@ -82,6 +82,14 @@ func (api *API) Serve() error {
 		v1router.Post("/namespaces/:namespace/deactivate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointDeactivateNamespace)
 		v1router.Post("/namespaces/:namespace/activate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointActivateNamespace)
 		v1router.Delete("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
+
+		// Register the element endpoints
+		v1router.Get("/elements", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointListElements)
+		v1router.Get("/elements/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointListNamespaceElements)
+		v1router.Get("/elements/:namespace/:key", v1.MiddlewareInjectNamespace, v1.EndpointGetElement)
+		v1router.Post("/elements/:namespace/paste/:key?", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointCreatePasteElement)
+		v1router.Post("/elements/:namespace/redirect/:key?", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointCreateRedirectElement)
+		v1router.Delete("/elements/:namespace/:key", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointDeleteElement)
 	}
 
 	return app.Listen(api.Address)
