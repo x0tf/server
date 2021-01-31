@@ -111,6 +111,23 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	return ctx.JSON(namespaceCopy)
 }
 
+// EndpointPatchNamespaceToken handles the PATCH /v1/namespaces/:namespace/token endpoint
+func EndpointPatchNamespaceToken(ctx *fiber.Ctx) error {
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+	newToken := token.Generate()
+	hash, err := token.Hash(newToken)
+	if err != nil {
+		return err
+	}
+	namespace.Token = hash
+
+	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
+	if err = namespaces.CreateOrReplace(namespace); err != nil {
+		return err
+	}
+	return ctx.SendString(newToken)
+}
+
 // EndpointDeleteNamespace handles the DELETE /v1/namespaces/:namespace endpoint
 func EndpointDeleteNamespace(ctx *fiber.Ctx) error {
 	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
