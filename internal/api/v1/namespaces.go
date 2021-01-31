@@ -38,6 +38,33 @@ func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
 
 // EndpointCreateNamespace handles the POST /v1/namespaces/:namespace endpoint
 func EndpointCreateNamespace(ctx *fiber.Ctx) error {
+	// Check if the user has to provide an invite code
+	invites := ctx.Locals("__invites").(shared.InviteService)
+	var usedInvite string
+	if invites != nil {
+		// Parse the JSON body into a map
+		var data map[string]interface{}
+		if err := ctx.BodyParser(&data); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "could not parse request body")
+		}
+
+		// Try to retrieve the invite code value of the JSON body
+		invite, ok := data["invite"].(string)
+		if !ok {
+			return fiber.NewError(fiber.StatusBadRequest, "got an illegal value as invite code")
+		}
+
+		// Check if the given invite code is valid
+		isValid, err := invites.IsValid(invite)
+		if err != nil {
+			return err
+		}
+		if !isValid {
+			return fiber.NewError(fiber.StatusUnprocessableEntity, "invalid invite code")
+		}
+		usedInvite = invite
+	}
+
 	// Validate the given namespace ID
 	id := ctx.Params("namespace")
 	if errors := validation.ValidateNamespaceID(id); len(errors) > 0 {
@@ -74,6 +101,13 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	namespace.Token = hash
 	if err = namespaces.CreateOrReplace(namespace); err != nil {
 		return err
+	}
+
+	// Delete the invite code if one was used
+	if usedInvite != "" && invites != nil {
+		if err = invites.Delete(usedInvite); err != nil {
+			return err
+		}
 	}
 
 	// Return the copied namespace with the raw token still placed in it

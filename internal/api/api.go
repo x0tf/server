@@ -17,6 +17,7 @@ type API struct {
 	Version    string
 	Namespaces shared.NamespaceService
 	Elements   shared.ElementService
+	Invites    shared.InviteService
 }
 
 // Serve serves the REST API
@@ -51,6 +52,9 @@ func (api *API) Serve() error {
 		ctx.Locals("__version", api.Version)
 		ctx.Locals("__namespaces", api.Namespaces)
 		ctx.Locals("__elements", api.Elements)
+		if api.Invites != nil {
+			ctx.Locals("__invites", api.Invites)
+		}
 		return ctx.Next()
 	})
 

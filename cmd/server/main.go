@@ -23,6 +23,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	if err = namespaces.InitializeTable(); err != nil {
+		panic(err)
+	}
 	defer namespaces.Close()
 
 	// Initialize the element service
@@ -30,7 +33,23 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	if err = elements.InitializeTable(); err != nil {
+		panic(err)
+	}
 	defer elements.Close()
+
+	// Initialize the invite service if invites are activated
+	var invites *postgres.InviteService
+	if cfg.Invites {
+		invites, err = postgres.NewInviteService(cfg.DatabaseDSN)
+		if err != nil {
+			panic(err)
+		}
+		if err = invites.InitializeTable(); err != nil {
+			panic(err)
+		}
+		defer invites.Close()
+	}
 
 	// Start up the REST API
 	restApi := &api.API{
@@ -39,6 +58,7 @@ func main() {
 		Version:    static.ApplicationVersion,
 		Namespaces: namespaces,
 		Elements:   elements,
+		Invites:    invites,
 	}
 	go func() {
 		panic(restApi.Serve())
