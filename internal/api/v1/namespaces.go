@@ -23,7 +23,7 @@ func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
 		return err
 	}
 	if namespace == nil {
-		return fiber.ErrUnauthorized
+		return fiber.NewError(fiber.StatusNotFound, "that namespace does not exist")
 	}
 
 	// Compare the given authentication token with the one of the found namespace
@@ -68,8 +68,13 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Validate the given namespace ID
 	id := ctx.Params("namespace")
 	if errors := validation.ValidateNamespaceID(id); len(errors) > 0 {
-		// TODO: Maybe return every error
-		return fiber.NewError(fiber.StatusUnprocessableEntity, errors[0].Error())
+		messages := make([]string, 0, len(errors))
+		for _, err := range errors {
+			messages = append(messages, err.Error())
+		}
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"messages": messages,
+		})
 	}
 
 	// Check if a namespace with this ID already exists
@@ -125,7 +130,7 @@ func EndpointPatchNamespaceToken(ctx *fiber.Ctx) error {
 	if err = namespaces.CreateOrReplace(namespace); err != nil {
 		return err
 	}
-	return ctx.SendString(newToken)
+	return ctx.JSON(fiber.Map{"token": newToken})
 }
 
 // EndpointDeleteNamespace handles the DELETE /v1/namespaces/:namespace endpoint

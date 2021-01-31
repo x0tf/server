@@ -24,6 +24,7 @@ type API struct {
 func (api *API) Serve() error {
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: api.Production,
+		ErrorHandler:          errorHandler,
 	})
 
 	// Include CORS response headers
@@ -68,4 +69,14 @@ func (api *API) Serve() error {
 	}
 
 	return app.Listen(api.Address)
+}
+
+func errorHandler(ctx *fiber.Ctx, err error) error {
+	code := fiber.StatusInternalServerError
+	if fiberError, ok := err.(*fiber.Error); ok {
+		code = fiberError.Code
+	}
+	return ctx.Status(code).JSON(fiber.Map{
+		"messages": []string{err.Error()},
+	})
 }
