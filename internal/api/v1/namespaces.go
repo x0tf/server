@@ -41,7 +41,11 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Validate the given namespace ID
 	id := ctx.Params("namespace")
 	if errors := validation.ValidateNamespaceID(id); len(errors) > 0 {
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(errors)
+		messages := make([]string, 0, len(errors))
+		for _, err := range errors {
+			messages = append(messages, err.Error())
+		}
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(messages)
 	}
 
 	// Check if a namespace with this ID already exists

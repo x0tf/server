@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -46,6 +47,9 @@ func (service *NamespaceService) Namespace(sourceID string) (*shared.Namespace, 
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id = $1", tableNamespaces)
 	namespace, err := rowToNamespace(service.pool.QueryRow(context.Background(), query, sourceID))
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return namespace, nil
@@ -56,6 +60,9 @@ func (service *NamespaceService) Namespaces() ([]*shared.Namespace, error) {
 	query := fmt.Sprintf("SELECT * FROM %s", tableNamespaces)
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	defer rows.Close()

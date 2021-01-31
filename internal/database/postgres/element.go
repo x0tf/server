@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -47,6 +48,9 @@ func (service *ElementService) Element(sourceNamespace, sourceKey string) (*shar
 	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1 AND key = $2", tableElements)
 	element, err := rowToElement(service.pool.QueryRow(context.Background(), query, sourceNamespace, sourceKey))
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return element, nil
@@ -57,6 +61,9 @@ func (service *ElementService) Elements() ([]*shared.Element, error) {
 	query := fmt.Sprintf("SELECT * FROM %s", tableElements)
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -77,6 +84,9 @@ func (service *ElementService) ElementsInNamespace(namespace string) ([]*shared.
 	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1", tableElements)
 	rows, err := service.pool.Query(context.Background(), query, namespace)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	defer rows.Close()
