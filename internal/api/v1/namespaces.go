@@ -7,6 +7,24 @@ import (
 	"github.com/x0tf/server/internal/validation"
 )
 
+// EndpointListNamespaces handles the GET /v1/namespaces endpoint
+func EndpointListNamespaces(ctx *fiber.Ctx) error {
+	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
+	list, err := namespaces.Namespaces()
+	if err != nil {
+		return err
+	}
+
+	// Process the list to remove the tokens
+	processedList := make([]shared.Namespace, 0, len(list))
+	for _, namespace := range list {
+		processedNamespace := *namespace
+		processedNamespace.Token = ""
+		processedList = append(processedList, processedNamespace)
+	}
+	return ctx.JSON(processedList)
+}
+
 // EndpointGetNamespace handles the GET /v1/namespaces/:namespace endpoint
 func EndpointGetNamespace(ctx *fiber.Ctx) error {
 	namespace := *(ctx.Locals("_namespace").(*shared.Namespace))
