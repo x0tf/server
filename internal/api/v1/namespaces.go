@@ -19,7 +19,7 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Check if the user has to provide an invite code
 	invites, _ := ctx.Locals("__invites").(shared.InviteService)
 	var usedInvite string
-	if invites != nil {
+	if invites != nil && !ctx.Locals("_admin").(bool) {
 		// Parse the JSON body into a map
 		var data map[string]interface{}
 		if err := ctx.BodyParser(&data); err != nil {
