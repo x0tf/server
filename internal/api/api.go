@@ -65,6 +65,13 @@ func (api *API) Serve() error {
 	v1router := app.Group("/v1")
 	{
 		v1router.Get("/info", v1.EndpointGetInfo)
+
+		// Register the invite endpoints if required
+		if api.Invites != nil {
+			v1router.Post("/invites/:code?", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointCreateInvite)
+		}
+
+		// Register the namespace endpoints
 		v1router.Get("/namespaces/:namespace", v1.MiddlewareInjectNamespace, v1.EndpointGetNamespace)
 		v1router.Post("/namespaces/:namespace", v1.EndpointCreateNamespace)
 		v1router.Post("/namespaces/:namespace/resetToken", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointResetNamespaceToken)

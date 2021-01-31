@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/x0tf/server/internal/shared"
+	"strings"
 )
 
 // InviteService represents the postgres invite service
@@ -79,6 +80,9 @@ func (service *InviteService) Invites() ([]shared.Invite, error) {
 func (service *InviteService) Create(invite shared.Invite) error {
 	query := fmt.Sprintf("INSERT INTO %s (token) VALUES ($1)", tableInvites)
 	_, err := service.pool.Exec(context.Background(), query, invite)
+	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+		err = nil
+	}
 	return err
 }
 
