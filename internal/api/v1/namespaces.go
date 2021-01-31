@@ -7,6 +7,13 @@ import (
 	"github.com/x0tf/server/internal/validation"
 )
 
+// EndpointGetNamespace handles the GET /v1/namespaces/:namespace endpoint
+func EndpointGetNamespace(ctx *fiber.Ctx) error {
+	namespace := *(ctx.Locals("_namespace").(*shared.Namespace))
+	namespace.Token = ""
+	return ctx.JSON(namespace)
+}
+
 // EndpointCreateNamespace handles the POST /v1/namespaces/:namespace endpoint
 func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Check if the user has to provide an invite code

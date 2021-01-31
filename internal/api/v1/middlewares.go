@@ -7,9 +7,8 @@ import (
 	"strings"
 )
 
-// MiddlewareTokenAuth handles namespace token authentication
-func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
-	// Extract the namespace service, retrieve the requested namespace and check if it exists
+// MiddlewareInjectNamespace injects the requested namespace if it exists
+func MiddlewareInjectNamespace(ctx *fiber.Ctx) error {
 	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
 	namespace, err := namespaces.Namespace(ctx.Params("namespace"))
 	if err != nil {
@@ -18,7 +17,12 @@ func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
 	if namespace == nil {
 		return fiber.NewError(fiber.StatusNotFound, "that namespace does not exist")
 	}
+	ctx.Locals("_namespace", namespace)
+	return ctx.Next()
+}
 
+// MiddlewareTokenAuth handles namespace token authentication
+func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
 	// Perform user authentication if the request was not made by an admin
 	isAdmin, _ := ctx.Locals("_admin").(bool)
 	if !isAdmin {
@@ -29,13 +33,11 @@ func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
 		}
 
 		// Compare the given authentication token with the one of the found namespace
+		namespace := ctx.Locals("_namespace").(*shared.Namespace)
 		if valid, _ := token.Check(namespace.Token, header[1]); !valid {
 			return fiber.ErrUnauthorized
 		}
 	}
-
-	// Inject the namespace this request is aimed at
-	ctx.Locals("_namespace", namespace)
 	return ctx.Next()
 }
 

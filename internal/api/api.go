@@ -65,11 +65,12 @@ func (api *API) Serve() error {
 	v1router := app.Group("/v1")
 	{
 		v1router.Get("/info", v1.EndpointGetInfo)
+		v1router.Get("/namespaces/:namespace", v1.MiddlewareInjectNamespace, v1.EndpointGetNamespace)
 		v1router.Post("/namespaces/:namespace", v1.EndpointCreateNamespace)
-		v1router.Post("/namespaces/:namespace/resetToken", v1.MiddlewareAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointResetNamespaceToken)
-		v1router.Post("/namespaces/:namespace/deactivate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointDeactivateNamespace)
-		v1router.Post("/namespaces/:namespace/activate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointActivateNamespace)
-		v1router.Delete("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
+		v1router.Post("/namespaces/:namespace/resetToken", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointResetNamespaceToken)
+		v1router.Post("/namespaces/:namespace/deactivate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointDeactivateNamespace)
+		v1router.Post("/namespaces/:namespace/activate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointActivateNamespace)
+		v1router.Delete("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
 	}
 
 	return app.Listen(api.Address)
