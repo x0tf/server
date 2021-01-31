@@ -4,6 +4,7 @@ import (
 	"github.com/x0tf/server/internal/api"
 	"github.com/x0tf/server/internal/config"
 	"github.com/x0tf/server/internal/database/postgres"
+	"github.com/x0tf/server/internal/gateway"
 	"github.com/x0tf/server/internal/static"
 	"log"
 	"os"
@@ -66,6 +67,17 @@ func main() {
 	}
 	go func() {
 		panic(restApi.Serve())
+	}()
+
+	// Start up the gateway
+	gw := &gateway.Gateway{
+		Address:    cfg.GatewayAddress,
+		Production: static.ApplicationMode == "PROD",
+		Namespaces: namespaces,
+		Elements:   elements,
+	}
+	go func() {
+		panic(gw.Serve())
 	}()
 
 	// Wait for the program to exit

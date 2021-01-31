@@ -77,7 +77,7 @@ func (api *API) Serve() error {
 		// Register the namespace endpoints
 		v1router.Get("/namespaces", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointListNamespaces)
 		v1router.Get("/namespaces/:namespace", v1.MiddlewareInjectNamespace, v1.EndpointGetNamespace)
-		v1router.Post("/namespaces/:namespace", v1.EndpointCreateNamespace)
+		v1router.Post("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.EndpointCreateNamespace)
 		v1router.Post("/namespaces/:namespace/resetToken", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointResetNamespaceToken)
 		v1router.Post("/namespaces/:namespace/deactivate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointDeactivateNamespace)
 		v1router.Post("/namespaces/:namespace/activate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointActivateNamespace)
