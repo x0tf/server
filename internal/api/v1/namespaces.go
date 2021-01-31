@@ -11,7 +11,7 @@ import (
 // MiddlewareTokenAuth handles namespace token authentication
 func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
 	// Read and validate the header itself
-	header := strings.SplitN(ctx.Get(fiber.HeaderAuthorization), " ", 1)
+	header := strings.SplitN(ctx.Get(fiber.HeaderAuthorization), " ", 2)
 	if len(header) != 2 || header[0] != "Bearer" {
 		return fiber.ErrUnauthorized
 	}
@@ -68,11 +68,8 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Validate the given namespace ID
 	id := ctx.Params("namespace")
 	if errors := validation.ValidateNamespaceID(id); len(errors) > 0 {
-		messages := make([]string, 0, len(errors))
-		for _, err := range errors {
-			messages = append(messages, err.Error())
-		}
-		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(messages)
+		// TODO: Maybe return every error
+		return fiber.NewError(fiber.StatusUnprocessableEntity, errors[0].Error())
 	}
 
 	// Check if a namespace with this ID already exists
@@ -112,4 +109,10 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 
 	// Return the copied namespace with the raw token still placed in it
 	return ctx.JSON(namespaceCopy)
+}
+
+// EndpointDeleteNamespace handles the DELETE /v1/namespaces/:namespace endpoint
+func EndpointDeleteNamespace(ctx *fiber.Ctx) error {
+	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
+	return namespaces.Delete(ctx.Locals("_namespace").(*shared.Namespace).ID)
 }

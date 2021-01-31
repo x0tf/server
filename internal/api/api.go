@@ -63,6 +63,7 @@ func (api *API) Serve() error {
 	{
 		v1router.Get("/info", v1.EndpointGetInfo)
 		v1router.Post("/namespaces/:namespace", v1.EndpointCreateNamespace)
+		v1router.Delete("/namespaces/:namespace", v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
 	}
 
 	return app.Listen(api.Address)
