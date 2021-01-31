@@ -12,12 +12,13 @@ import (
 
 // API represents the REST API
 type API struct {
-	Address    string
-	Production bool
-	Version    string
-	Namespaces shared.NamespaceService
-	Elements   shared.ElementService
-	Invites    shared.InviteService
+	Address     string
+	Production  bool
+	Version     string
+	AdminTokens []string
+	Namespaces  shared.NamespaceService
+	Elements    shared.ElementService
+	Invites     shared.InviteService
 }
 
 // Serve serves the REST API
@@ -56,6 +57,7 @@ func (api *API) Serve() error {
 		if api.Invites != nil {
 			ctx.Locals("__invites", api.Invites)
 		}
+		ctx.Locals("__admin_tokens", api.AdminTokens)
 		return ctx.Next()
 	})
 
@@ -64,8 +66,8 @@ func (api *API) Serve() error {
 	{
 		v1router.Get("/info", v1.EndpointGetInfo)
 		v1router.Post("/namespaces/:namespace", v1.EndpointCreateNamespace)
-		v1router.Delete("/namespaces/:namespace", v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
-		v1router.Patch("/namespaces/:namespace/token", v1.MiddlewareTokenAuth, v1.EndpointPatchNamespaceToken)
+		v1router.Delete("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
+		v1router.Patch("/namespaces/:namespace/token", v1.MiddlewareAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointPatchNamespaceToken)
 	}
 
 	return app.Listen(api.Address)

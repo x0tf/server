@@ -52,14 +52,14 @@ func main() {
 	}
 
 	// Start up the REST API
-	log.Println(invites)
 	restApi := &api.API{
-		Address:    cfg.APIAddress,
-		Production: static.ApplicationMode == "PROD",
-		Version:    static.ApplicationVersion,
-		Namespaces: namespaces,
-		Elements:   elements,
-		Invites:    invites,
+		Address:     cfg.APIAddress,
+		Production:  static.ApplicationMode == "PROD",
+		Version:     static.ApplicationVersion,
+		Namespaces:  namespaces,
+		Elements:    elements,
+		Invites:     invites,
+		AdminTokens: cfg.AdminTokens,
 	}
 	if invites == nil {
 		restApi.Invites = nil

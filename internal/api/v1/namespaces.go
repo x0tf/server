@@ -5,36 +5,7 @@ import (
 	"github.com/x0tf/server/internal/shared"
 	"github.com/x0tf/server/internal/token"
 	"github.com/x0tf/server/internal/validation"
-	"strings"
 )
-
-// MiddlewareTokenAuth handles namespace token authentication
-func MiddlewareTokenAuth(ctx *fiber.Ctx) error {
-	// Read and validate the header itself
-	header := strings.SplitN(ctx.Get(fiber.HeaderAuthorization), " ", 2)
-	if len(header) != 2 || header[0] != "Bearer" {
-		return fiber.ErrUnauthorized
-	}
-
-	// Extract the namespace service, retrieve the requested namespace and check if it exists
-	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
-	namespace, err := namespaces.Namespace(ctx.Params("namespace"))
-	if err != nil {
-		return err
-	}
-	if namespace == nil {
-		return fiber.NewError(fiber.StatusNotFound, "that namespace does not exist")
-	}
-
-	// Compare the given authentication token with the one of the found namespace
-	if valid, _ := token.Check(namespace.Token, header[1]); !valid {
-		return fiber.ErrUnauthorized
-	}
-
-	// Inject the namespace this request is aimed at
-	ctx.Locals("_namespace", namespace)
-	return ctx.Next()
-}
 
 // EndpointCreateNamespace handles the POST /v1/namespaces/:namespace endpoint
 func EndpointCreateNamespace(ctx *fiber.Ctx) error {
