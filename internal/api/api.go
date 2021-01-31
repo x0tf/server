@@ -68,7 +68,10 @@ func (api *API) Serve() error {
 
 		// Register the invite endpoints if required
 		if api.Invites != nil {
+			v1router.Get("/invites", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointListInvites)
+			v1router.Get("/invites/:code", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointValidateInvite)
 			v1router.Post("/invites/:code?", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointCreateInvite)
+			v1router.Delete("/invites/:code", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointDeleteInvite)
 		}
 
 		// Register the namespace endpoints
