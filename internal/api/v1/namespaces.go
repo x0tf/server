@@ -87,8 +87,8 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	return ctx.JSON(namespaceCopy)
 }
 
-// EndpointPatchNamespaceToken handles the PATCH /v1/namespaces/:namespace/token endpoint
-func EndpointPatchNamespaceToken(ctx *fiber.Ctx) error {
+// EndpointResetNamespaceToken handles the POST /v1/namespaces/:namespace/resetToken endpoint
+func EndpointResetNamespaceToken(ctx *fiber.Ctx) error {
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
 	newToken := token.Generate()
 	hash, err := token.Hash(newToken)
@@ -102,6 +102,22 @@ func EndpointPatchNamespaceToken(ctx *fiber.Ctx) error {
 		return err
 	}
 	return ctx.JSON(fiber.Map{"token": newToken})
+}
+
+// EndpointDeactivateNamespace handles the POST /v1/namespaces/:namespace/deactivate endpoint
+func EndpointDeactivateNamespace(ctx *fiber.Ctx) error {
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
+	namespace.Active = false
+	return namespaces.CreateOrReplace(namespace)
+}
+
+// EndpointActivateNamespace handles the POST /v1/namespaces/:namespace/activate endpoint
+func EndpointActivateNamespace(ctx *fiber.Ctx) error {
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
+	namespace.Active = true
+	return namespaces.CreateOrReplace(namespace)
 }
 
 // EndpointDeleteNamespace handles the DELETE /v1/namespaces/:namespace endpoint

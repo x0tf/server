@@ -66,8 +66,10 @@ func (api *API) Serve() error {
 	{
 		v1router.Get("/info", v1.EndpointGetInfo)
 		v1router.Post("/namespaces/:namespace", v1.EndpointCreateNamespace)
+		v1router.Post("/namespaces/:namespace/resetToken", v1.MiddlewareAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointResetNamespaceToken)
+		v1router.Post("/namespaces/:namespace/deactivate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointDeactivateNamespace)
+		v1router.Post("/namespaces/:namespace/activate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointActivateNamespace)
 		v1router.Delete("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
-		v1router.Patch("/namespaces/:namespace/token", v1.MiddlewareAdminAuth, v1.MiddlewareTokenAuth, v1.EndpointPatchNamespaceToken)
 	}
 
 	return app.Listen(api.Address)
