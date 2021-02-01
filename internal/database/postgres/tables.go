@@ -1,6 +1,6 @@
 package postgres
 
-const (
+var (
 	// tableNamespaces represents the namespace table name to use for the postgres database driver
 	tableNamespaces = "namespaces"
 

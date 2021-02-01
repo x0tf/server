@@ -1,6 +1,6 @@
 package static
 
-const (
+var (
 	// ApplicationMode defines if this application should start up in production mode ('PROD') or not (anything else)
 	ApplicationMode = "DEV"
 

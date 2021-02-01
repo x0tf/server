@@ -150,9 +150,9 @@ func EndpointActivateNamespace(ctx *fiber.Ctx) error {
 func EndpointDeleteNamespace(ctx *fiber.Ctx) error {
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
 	namespaces := ctx.Locals("__namespaces").(shared.NamespaceService)
-	elements := ctx.Locals("__elements").(shared.NamespaceService)
+	elements := ctx.Locals("__elements").(shared.ElementService)
 
-	if err := elements.Delete(namespace.ID); err != nil {
+	if err := elements.DeleteInNamespace(namespace.ID); err != nil {
 		return err
 	}
 

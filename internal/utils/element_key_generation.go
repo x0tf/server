@@ -1,10 +1,10 @@
 package utils
 
 // elementKeyLength represents the length of an element key
-const elementKeyLength = 8
+var elementKeyLength = 8
 
 // elementKeyCharacters represents the characters an element key may contain
-const elementKeyCharacters = "abcdefghijklmnopqrstuvwxyz0123456789"
+var elementKeyCharacters = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 var elementKeyCharactersRunes = []rune(elementKeyCharacters)
 

@@ -6,7 +6,7 @@ import (
 	"unicode/utf8"
 )
 
-const (
+var (
 	// namespaceIDMinimumLength represents the minimum length of a namespace ID
 	namespaceIDMinimumLength = 1
 
