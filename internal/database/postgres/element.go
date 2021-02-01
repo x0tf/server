@@ -122,6 +122,13 @@ func (service *ElementService) Delete(namespace, key string) error {
 	return err
 }
 
+// DeleteInNamespace deletes every element in a namespace
+func (service *ElementService) DeleteInNamespace(namespace string) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE namespace = $1", tableElements)
+	_, err := service.pool.Exec(context.Background(), query, namespace)
+	return err
+}
+
 // Close closes the postgres element service
 func (service *ElementService) Close() {
 	service.pool.Close()

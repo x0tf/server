@@ -26,4 +26,5 @@ type ElementService interface {
 	ElementsInNamespace(string) ([]*Element, error)
 	CreateOrReplace(*Element) error
 	Delete(string, string) error
+	DeleteInNamespace(string) error
 }
