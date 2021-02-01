@@ -51,8 +51,14 @@ func EndpointGetElement(ctx *fiber.Ctx) error {
 
 // EndpointCreatePasteElement handles the POST /v1/elements/:namespace/paste/:key? endpoint
 func EndpointCreatePasteElement(ctx *fiber.Ctx) error {
+	isAdmin := ctx.Locals("_admin").(bool)
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
 	elements := ctx.Locals("__elements").(shared.ElementService)
+
+	// Check if the namespace is deactivated
+	if !namespace.Active && !isAdmin {
+		return fiber.NewError(fiber.StatusForbidden, "this namespace is deactivated")
+	}
 
 	// Parse the JSON body into a map
 	var data map[string]interface{}
@@ -103,8 +109,14 @@ func EndpointCreatePasteElement(ctx *fiber.Ctx) error {
 
 // EndpointCreateRedirectElement handles the POST /v1/elements/:namespace/redirect/:key? endpoint
 func EndpointCreateRedirectElement(ctx *fiber.Ctx) error {
+	isAdmin := ctx.Locals("_admin").(bool)
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
 	elements := ctx.Locals("__elements").(shared.ElementService)
+
+	// Check if the namespace is deactivated
+	if !namespace.Active && !isAdmin {
+		return fiber.NewError(fiber.StatusForbidden, "this namespace is deactivated")
+	}
 
 	// Parse the JSON body into a map
 	var data map[string]interface{}
