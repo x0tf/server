@@ -13,12 +13,13 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Build the application
+ARG X0_VERSION=unset-debug
 COPY . .
 RUN go build \
         -o server \
         -ldflags "\
             -X github.com/x0tf/server/internal/static.ApplicationMode=PROD \
-            -X github.com/x0tf/server/internal/static.ApplicationVersion=$(git rev-parse --abbrev-ref HEAD)-$(git describe --tags --abbrev=0)-$(git log --pretty=format:'%h' -n 1)" \
+            -X github.com/x0tf/server/internal/static.ApplicationVersion=$X0_VERSION" \
         ./cmd/server/
 
 # Run the application in an empty alpine environment
