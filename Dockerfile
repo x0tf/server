@@ -18,7 +18,7 @@ RUN go build \
         -o server \
         -ldflags "\
             -X github.com/x0tf/server/internal/static.ApplicationMode=PROD \
-            -X github.com/x0tf/server/internal/static.ApplicationVersion=$(git rev-parse --abbrev-ref HEAD)-$(git describe --tags --abbrev=0)-$(git log --pretty=format:'%h' -n 1)" \
+            -X github.com/x0tf/server/internal/static.ApplicationVersion=$(git rev-parse --abbrev-ref HEAD)-$(git log --pretty=format:'%h' -n 1)" \
         ./cmd/server/
 
 # Run the application in an empty alpine environment
