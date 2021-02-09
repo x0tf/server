@@ -1,6 +1,11 @@
 name: general
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
 
 jobs:
   build:
