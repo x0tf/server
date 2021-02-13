@@ -38,6 +38,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ghcr.io/x0tf/server:${{ env.TAG }}
+          tags: |
+            ghcr.io/x0tf/server:${{ env.TAG }}
+            ghcr.io/x0tf/server:${{ env.COMMIT_HASH }}
           build-args:
             X0_VERSION=${{ env.BRANCH }}-${{ env.COMMIT_HASH }}
