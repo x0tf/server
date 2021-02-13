@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
@@ -47,6 +48,17 @@ func (api *API) Serve() error {
 		app.Use(logger.New())
 		app.Use(pprof.New())
 	}
+
+	// Inject the rate limiter middleware
+	app.Use(limiter.New(limiter.Config{
+		Next: func(_ *fiber.Ctx) bool {
+			return !api.Production
+		},
+		Max: 60,
+		LimitReached: func(ctx *fiber.Ctx) error {
+			return fiber.ErrTooManyRequests
+		},
+	}))
 
 	// Inject the application data
 	app.Use(func(ctx *fiber.Ctx) error {
