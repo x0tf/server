@@ -1,8 +1,9 @@
-name: docker-staging
+name: docker-latest
 
 on:
   push:
     branches:
+      - main
       - develop
     paths-ignore:
       - '**.md'
@@ -17,6 +18,12 @@ jobs:
         run: echo "BRANCH=$(git rev-parse --abbrev-ref HEAD)" >> $GITHUB_ENV
       - name: define commit hash
         run: echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      - name: define staging tag
+        if: env.BRANCH == 'develop'
+        run: echo "TAG=staging" >> $GITHUB_ENV
+      - name: define latest tag
+        if: env.BRANCH == 'main'
+        run: echo "TAG=latest" >> $GITHUB_ENV
       - name: set up qemu
         uses: docker/setup-qemu-action@v1
       - name: set up buildx
@@ -31,6 +38,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ghcr.io/x0tf/server:staging
+          tags: ghcr.io/x0tf/server:${{ env.TAG }}
           build-args:
             X0_VERSION=${{ env.BRANCH }}-${{ env.COMMIT_HASH }}
