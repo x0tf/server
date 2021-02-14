@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
+	log "github.com/sirupsen/logrus"
 	"github.com/x0tf/server/internal/shared"
 )
 
@@ -49,11 +50,13 @@ func (gateway *Gateway) Serve() error {
 		})
 	}
 
+	log.WithField("address", gateway.Address).Info("Serving the gateway")
 	gateway.app = app
 	return app.Listen(gateway.Address)
 }
 
 // Shutdown gracefully shuts down the gateway
 func (gateway *Gateway) Shutdown() error {
+	log.Info("Shutting down the gateway")
 	return gateway.app.Shutdown()
 }

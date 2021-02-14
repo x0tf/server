@@ -1,12 +1,12 @@
 package main
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/x0tf/server/internal/api"
 	"github.com/x0tf/server/internal/config"
 	"github.com/x0tf/server/internal/database/postgres"
 	"github.com/x0tf/server/internal/gateway"
 	"github.com/x0tf/server/internal/static"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,26 +16,26 @@ func main() {
 	// Initialize the application configuration
 	cfg, usedDotEnv := config.Load()
 	if !usedDotEnv {
-		log.Println("NOTE: No .env file was found. This is no error and the application will use the systems environment variables.")
+		log.Info("NOTE: No .env file was found. This is no error and the application will use the systems environment variables.")
 	}
 
 	// Initialize the namespace service
 	namespaces, err := postgres.NewNamespaceService(cfg.DatabaseDSN)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if err = namespaces.InitializeTable(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer namespaces.Close()
 
 	// Initialize the element service
 	elements, err := postgres.NewElementService(cfg.DatabaseDSN)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if err = elements.InitializeTable(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer elements.Close()
 
@@ -44,10 +44,10 @@ func main() {
 	if cfg.Invites {
 		invites, err = postgres.NewInviteService(cfg.DatabaseDSN)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		if err = invites.InitializeTable(); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		defer invites.Close()
 	}
@@ -67,7 +67,7 @@ func main() {
 	}
 	go func() {
 		if err := restApi.Serve(); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}()
 
@@ -81,7 +81,7 @@ func main() {
 	}
 	go func() {
 		if err := gw.Serve(); err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 	}()
 
@@ -92,11 +92,11 @@ func main() {
 
 	// Gracefully shut down the REST API
 	if err := restApi.Shutdown(); err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 
 	// Gracefully shut down the gateway
 	if err := gw.Shutdown(); err != nil {
-		log.Println(err)
+		log.Error(err)
 	}
 }

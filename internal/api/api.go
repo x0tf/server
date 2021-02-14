@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
+	log "github.com/sirupsen/logrus"
 	v1 "github.com/x0tf/server/internal/api/v1"
 	"github.com/x0tf/server/internal/shared"
 )
@@ -105,12 +106,14 @@ func (api *API) Serve() error {
 		v1router.Delete("/elements/:namespace/:key", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointDeleteElement)
 	}
 
+	log.WithField("address", api.Address).Info("Serving the REST API")
 	api.app = app
 	return app.Listen(api.Address)
 }
 
 // Shutdown gracefully shuts down the REST API
 func (api *API) Shutdown() error {
+	log.Info("Shutting down the REST API")
 	return api.app.Shutdown()
 }
 
