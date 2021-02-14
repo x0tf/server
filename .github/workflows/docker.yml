@@ -1,4 +1,4 @@
-name: docker-latest
+name: docker
 
 on:
   push:
