@@ -71,10 +71,11 @@ func main() {
 
 	// Start up the gateway
 	gw := &gateway.Gateway{
-		Address:    cfg.GatewayAddress,
-		Production: static.ApplicationMode == "PROD",
-		Namespaces: namespaces,
-		Elements:   elements,
+		Address:      cfg.GatewayAddress,
+		Production:   static.ApplicationMode == "PROD",
+		Namespaces:   namespaces,
+		Elements:     elements,
+		RootRedirect: cfg.GatewayRootRedirect,
 	}
 	go func() {
 		panic(gw.Serve())

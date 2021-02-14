@@ -10,10 +10,11 @@ import (
 
 // Gateway represents the element-exposing gateway
 type Gateway struct {
-	Address    string
-	Production bool
-	Namespaces shared.NamespaceService
-	Elements   shared.ElementService
+	Address      string
+	Production   bool
+	Namespaces   shared.NamespaceService
+	Elements     shared.ElementService
+	RootRedirect string
 }
 
 // Serve serves the gateway
@@ -39,6 +40,13 @@ func (gateway *Gateway) Serve() error {
 	})
 
 	app.Get("/:namespace/:key", baseHandler)
+
+	// Define the root redirect
+	if gateway.RootRedirect != "" {
+		app.Get("/", func(ctx *fiber.Ctx) error {
+			return ctx.Redirect(gateway.RootRedirect, fiber.StatusPermanentRedirect)
+		})
+	}
 
 	return app.Listen(gateway.Address)
 }
