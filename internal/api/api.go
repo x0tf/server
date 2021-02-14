@@ -13,6 +13,7 @@ import (
 
 // API represents the REST API
 type API struct {
+	app         *fiber.App
 	Address     string
 	Production  bool
 	Version     string
@@ -104,7 +105,13 @@ func (api *API) Serve() error {
 		v1router.Delete("/elements/:namespace/:key", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointDeleteElement)
 	}
 
+	api.app = app
 	return app.Listen(api.Address)
+}
+
+// Shutdown gracefully shuts down the REST API
+func (api *API) Shutdown() error {
+	return api.app.Shutdown()
 }
 
 func errorHandler(ctx *fiber.Ctx, err error) error {

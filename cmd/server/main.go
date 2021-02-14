@@ -66,7 +66,9 @@ func main() {
 		restApi.Invites = nil
 	}
 	go func() {
-		panic(restApi.Serve())
+		if err := restApi.Serve(); err != nil {
+			panic(err)
+		}
 	}()
 
 	// Start up the gateway
@@ -78,11 +80,23 @@ func main() {
 		RootRedirect: cfg.GatewayRootRedirect,
 	}
 	go func() {
-		panic(gw.Serve())
+		if err := gw.Serve(); err != nil {
+			panic(err)
+		}
 	}()
 
 	// Wait for the program to exit
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	<-sc
+
+	// Gracefully shut down the REST API
+	if err := restApi.Shutdown(); err != nil {
+		log.Println(err)
+	}
+
+	// Gracefully shut down the gateway
+	if err := gw.Shutdown(); err != nil {
+		log.Println(err)
+	}
 }

@@ -10,6 +10,7 @@ import (
 
 // Gateway represents the element-exposing gateway
 type Gateway struct {
+	app          *fiber.App
 	Address      string
 	Production   bool
 	Namespaces   shared.NamespaceService
@@ -48,5 +49,11 @@ func (gateway *Gateway) Serve() error {
 		})
 	}
 
+	gateway.app = app
 	return app.Listen(gateway.Address)
+}
+
+// Shutdown gracefully shuts down the gateway
+func (gateway *Gateway) Shutdown() error {
+	return gateway.app.Shutdown()
 }
