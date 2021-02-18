@@ -22,6 +22,9 @@ func baseHandler(ctx *fiber.Ctx) error {
 	// Retrieve the element
 	elements := ctx.Locals("__elements").(shared.ElementService)
 	elementKey := strings.ToLower(ctx.Params("key"))
+	if elementKey == "" {
+		elementKey = "@"
+	}
 	element, err := elements.Element(namespace.ID, elementKey)
 	if err != nil {
 		return err

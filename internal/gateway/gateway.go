@@ -41,7 +41,7 @@ func (gateway *Gateway) Serve() error {
 		return ctx.Next()
 	})
 
-	app.Get("/:namespace/:key", baseHandler)
+	app.Get("/:namespace/:key?", baseHandler)
 
 	// Define the root redirect
 	if gateway.RootRedirect != "" {
