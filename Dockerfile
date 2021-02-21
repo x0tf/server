@@ -1,5 +1,5 @@
 # Choose the golang image as the build base image
-FROM golang:1.15-alpine AS build
+FROM golang:1.16-alpine AS build
 
 # Install git for the version string
 RUN apk update && apk upgrade && \
