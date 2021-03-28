@@ -54,16 +54,19 @@ func main() {
 
 	// Start up the REST API
 	restApi := &api.API{
-		Address:     cfg.APIAddress,
-		Production:  static.ApplicationMode == "PROD",
-		Version:     static.ApplicationVersion,
-		Namespaces:  namespaces,
-		Elements:    elements,
-		Invites:     invites,
-		AdminTokens: cfg.AdminTokens,
-	}
-	if invites == nil {
-		restApi.Invites = nil
+		Settings: &api.Settings{
+			Address:           cfg.APIAddress,
+			RequestsPerMinute: cfg.APIRequestsPerMinute,
+			Production:        static.ApplicationMode == "PROD",
+			Version:           static.ApplicationVersion,
+			AdminTokens:       cfg.AdminTokens,
+			InvitesEnabled:    cfg.Invites,
+		},
+		Services: &api.Services{
+			Namespaces: namespaces,
+			Elements:   elements,
+			Invites:    invites,
+		},
 	}
 	go func() {
 		if err := restApi.Serve(); err != nil {
