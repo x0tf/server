@@ -47,3 +47,10 @@ func EndpointGetNamespaces(ctx *fiber.Ctx) error {
 		},
 	})
 }
+
+// EndpointGetNamespace handles the 'GET /v2/namespaces/:namespace_id' endpoint
+func EndpointGetNamespace(ctx *fiber.Ctx) error {
+	namespace := *(ctx.Locals("_namespace").(*shared.Namespace))
+	namespace.Token = ""
+	return ctx.JSON(namespace)
+}

@@ -37,7 +37,6 @@ func ErrorHandler(ctx *fiber.Ctx, err error) error {
 	var apiError *apiError
 	if !errors.As(err, &apiError) {
 		apiError = newError(fiber.StatusInternalServerError, errorCodeGenericUnexpectedError, err.Error(), nil)
-		fmt.Println(apiError.StatusCode)
 	}
 	return ctx.Status(apiError.StatusCode).JSON(apiError)
 }
