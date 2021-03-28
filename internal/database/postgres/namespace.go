@@ -14,6 +14,19 @@ type namespaceService struct {
 	pool *pgxpool.Pool
 }
 
+// Count counts the total amount of namespaces
+func (service *namespaceService) Count() (int, error) {
+	query := "SELECT COUNT(*) FROM namespaces"
+
+	row := service.pool.QueryRow(context.Background(), query)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // Namespace retrieves a namespace with a specific ID
 func (service *namespaceService) Namespace(id string) (*shared.Namespace, error) {
 	query := "SELECT * FROM namespaces WHERE id = $1"

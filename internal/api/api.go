@@ -100,6 +100,8 @@ func (api *API) Serve() error {
 	v2group := app.Group("/v2")
 	{
 		v2group.Get("/info", v2.EndpointGetInfo)
+
+		v2group.Get("/namespaces", v2.MiddlewareAdminAuth(true), v2.EndpointGetNamespaces)
 	}
 
 	log.WithField("address", api.Settings.Address).Info("Serving the REST API")

@@ -14,6 +14,19 @@ type elementService struct {
 	pool *pgxpool.Pool
 }
 
+// Count counts the total amount of elements
+func (service *elementService) Count() (int, error) {
+	query := "SELECT COUNT(*) FROM elements"
+
+	row := service.pool.QueryRow(context.Background(), query)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // Element retrieves an element with a specific key out of a specific namespace
 func (service *elementService) Element(namespace, key string) (*shared.Element, error) {
 	query := "SELECT * FROM elements WHERE namespace = $1 AND key = $2"

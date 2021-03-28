@@ -27,6 +27,7 @@ type Element struct {
 
 // ElementService represents an element database service
 type ElementService interface {
+	Count() (int, error)
 	Element(namespace, key string) (*Element, error)
 	Elements(limit, offset int) ([]*Element, error)
 	ElementsInNamespace(namespace string, limit, offset int) ([]*Element, error)

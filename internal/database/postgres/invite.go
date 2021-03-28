@@ -14,6 +14,19 @@ type inviteService struct {
 	pool *pgxpool.Pool
 }
 
+// Count counts the total amount of invites
+func (service *inviteService) Count() (int, error) {
+	query := "SELECT COUNT(*) FROM invites"
+
+	row := service.pool.QueryRow(context.Background(), query)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // Invite retrieves an invite with a specific code
 func (service *inviteService) Invite(code string) (*shared.Invite, error) {
 	query := "SELECT * FROM invites WHERE code = $1"

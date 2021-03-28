@@ -10,6 +10,7 @@ type Namespace struct {
 
 // NamespaceService represents a namespace database service
 type NamespaceService interface {
+	Count() (int, error)
 	Namespace(id string) (*Namespace, error)
 	Namespaces(limit, offset int) ([]*Namespace, error)
 	CreateOrReplace(namespace *Namespace) error

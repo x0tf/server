@@ -10,6 +10,7 @@ type Invite struct {
 
 // InviteService represents an invite database service
 type InviteService interface {
+	Count() (int, error)
 	Invite(code string) (*Invite, error)
 	Invites(limit, offset int) ([]*Invite, error)
 	CreateOrReplace(invite *Invite) error
