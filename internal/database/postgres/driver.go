@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"embed"
+	"errors"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -57,7 +58,10 @@ func (driver *postgresDriver) Migrate() error {
 		return err
 	}
 
-	return migrator.Up()
+	if err := migrator.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
+	return nil
 }
 
 // Close closes the postgres database driver

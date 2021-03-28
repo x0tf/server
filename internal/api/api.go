@@ -39,6 +39,8 @@ type Services struct {
 // Serve serves the REST API
 func (api *API) Serve() error {
 	app := fiber.New(fiber.Config{
+		ErrorHandler:          v2.ErrorHandler,
+		DisableKeepalive:      true,
 		DisableStartupMessage: api.Settings.Production,
 	})
 
