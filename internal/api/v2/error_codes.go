@@ -1,5 +1,7 @@
 package v2
 
 const (
-	errorCodeUnexpectedError = 0
+	errorCodeGenericUnexpectedError = 1000
+	errorCodeGenericUnauthorized    = 1001
+	errorCodeGenericForbidden       = 1002
 )
