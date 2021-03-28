@@ -41,7 +41,9 @@ func (gateway *Gateway) Serve() error {
 		return ctx.Next()
 	})
 
-	app.Get("/:namespace/:key?", baseHandler)
+	app.Get("/:namespace/:key?", func(ctx *fiber.Ctx) error {
+		return ctx.Status(fiber.StatusNotImplemented).SendString("gateway method not implemented")
+	})
 
 	// Define the root redirect
 	if gateway.RootRedirect != "" {

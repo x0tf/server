@@ -1,4 +1,5 @@
 .idea/
 *.exe
 server
+main
 .env

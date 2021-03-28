@@ -7,93 +7,90 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/x0tf/server/internal/shared"
-	"strings"
 )
 
-// InviteService represents the postgres invite service
-type InviteService struct {
+// inviteService represents the postgres invite service implementation
+type inviteService struct {
 	pool *pgxpool.Pool
 }
 
-// NewInviteService creates a new postgres invite service
-func NewInviteService(dsn string) (*InviteService, error) {
-	// Open a postgres connection pool
-	pool, err := pgxpool.Connect(context.Background(), dsn)
-	if err != nil {
-		return nil, err
-	}
+// Invite retrieves an invite with a specific code
+func (service *inviteService) Invite(code string) (*shared.Invite, error) {
+	query := "SELECT * FROM invites WHERE code = $1"
 
-	// Create and return the invite service
-	return &InviteService{
-		pool: pool,
-	}, nil
-}
-
-// InitializeTable initializes the invite table
-func (service *InviteService) InitializeTable() error {
-	query := fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (
-			token VARCHAR(32) NOT NULL,
-			PRIMARY KEY (token)
-		)
-    `, tableInvites)
-	_, err := service.pool.Exec(context.Background(), query)
-	return err
-}
-
-// IsValid searches for a single invite with a specific token
-func (service *InviteService) IsValid(token string) (bool, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE token = $1", tableInvites)
-	if err := service.pool.QueryRow(context.Background(), query, token).Scan(nil); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
-}
-
-// Invites searches for all invites
-func (service *InviteService) Invites() ([]shared.Invite, error) {
-	query := fmt.Sprintf("SELECT * FROM %s", tableInvites)
-	rows, err := service.pool.Query(context.Background(), query)
+	invite, err := rowToInvite(service.pool.QueryRow(context.Background(), query, code))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
 
-	var invites []shared.Invite
+	return invite, nil
+}
+
+// Invites retrieves a list of invites using the given limit and offset
+func (service *inviteService) Invites(limit, offset int) ([]*shared.Invite, error) {
+	query := fmt.Sprintf("SELECT * FROM invites LIMIT %d OFFSET %d", limit, offset)
+
+	rows, err := service.pool.Query(context.Background(), query)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return []*shared.Invite{}, nil
+		}
+		return nil, err
+	}
+
+	var invites []*shared.Invite
 	for rows.Next() {
-		var invite shared.Invite
-		if err = rows.Scan(&invite); err != nil {
+		invite, err := rowToInvite(rows)
+		if err != nil {
 			return nil, err
 		}
 		invites = append(invites, invite)
 	}
+
 	return invites, nil
 }
 
-// Create creates an invite
-func (service *InviteService) Create(invite shared.Invite) error {
-	query := fmt.Sprintf("INSERT INTO %s (token) VALUES ($1)", tableInvites)
-	_, err := service.pool.Exec(context.Background(), query, invite)
-	if err != nil && strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-		err = nil
+// CreateOrReplace creates or replaces an invite
+func (service *inviteService) CreateOrReplace(invite *shared.Invite) error {
+	query := `
+		INSERT INTO invites (code, uses, max_uses, created)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (id) DO UPDATE
+			SET uses = excluded.uses,
+				max_uses = excluded.max_uses,
+				created = excluded.created
+	`
+
+	_, err := service.pool.Exec(context.Background(), query, invite.Code, invite.Uses, invite.MaxUses, invite.Created)
+	return err
+}
+
+// Delete deletes an invite with a specific code
+func (service *inviteService) Delete(code string) error {
+	query := "DELETE FROM invites WHERE code = $1"
+
+	_, err := service.pool.Exec(context.Background(), query, code)
+	return err
+}
+
+// rowToInvite reads a pgx row into an invite instance
+func rowToInvite(row pgx.Row) (*shared.Invite, error) {
+	var code string
+	var uses int
+	var maxUses int
+	var created int64
+
+	if err := row.Scan(&code, &uses, &maxUses, &created); err != nil {
+		return nil, err
 	}
-	return err
-}
 
-// Delete deletes an invite
-func (service *InviteService) Delete(token string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE token = $1", tableInvites)
-	_, err := service.pool.Exec(context.Background(), query, token)
-	return err
-}
-
-// Close closes the postgres invite service
-func (service *InviteService) Close() {
-	service.pool.Close()
+	return &shared.Invite{
+		Code:    code,
+		Uses:    uses,
+		MaxUses: maxUses,
+		Created: created,
+	}, nil
 }
