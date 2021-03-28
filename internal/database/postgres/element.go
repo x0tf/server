@@ -31,7 +31,7 @@ func (service *elementService) Element(namespace, key string) (*shared.Element, 
 
 // Elements retrieves a list of elements using the given limit and offset
 func (service *elementService) Elements(limit, offset int) ([]*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM elements LIMIT %d OFFSET %d", limit, offset)
+	query := fmt.Sprintf("SELECT * FROM elements ORDER BY created LIMIT %d OFFSET %d", limit, offset)
 
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {
@@ -55,7 +55,7 @@ func (service *elementService) Elements(limit, offset int) ([]*shared.Element, e
 
 // ElementsInNamespace retrieves a list of elements inside a specific namespace using the given limit and offset
 func (service *elementService) ElementsInNamespace(namespace string, limit, offset int) ([]*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM elements WHERE namespace = $1 LIMIT %d OFFSET %d", limit, offset)
+	query := fmt.Sprintf("SELECT * FROM elements WHERE namespace = $1 ORDER BY created LIMIT %d OFFSET %d", limit, offset)
 
 	rows, err := service.pool.Query(context.Background(), query, namespace)
 	if err != nil {

@@ -31,7 +31,7 @@ func (service *namespaceService) Namespace(id string) (*shared.Namespace, error)
 
 // Namespaces retrieves a list of namespaces using the given limit and offset
 func (service *namespaceService) Namespaces(limit, offset int) ([]*shared.Namespace, error) {
-	query := fmt.Sprintf("SELECT * FROM namespaces LIMIT %d OFFSET %d", limit, offset)
+	query := fmt.Sprintf("SELECT * FROM namespaces ORDER BY created LIMIT %d OFFSET %d", limit, offset)
 
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {

@@ -31,7 +31,7 @@ func (service *inviteService) Invite(code string) (*shared.Invite, error) {
 
 // Invites retrieves a list of invites using the given limit and offset
 func (service *inviteService) Invites(limit, offset int) ([]*shared.Invite, error) {
-	query := fmt.Sprintf("SELECT * FROM invites LIMIT %d OFFSET %d", limit, offset)
+	query := fmt.Sprintf("SELECT * FROM invites ORDER BY created LIMIT %d OFFSET %d", limit, offset)
 
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {
