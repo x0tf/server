@@ -8,27 +8,40 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
 	log "github.com/sirupsen/logrus"
-	v1 "github.com/x0tf/server/internal/api/v1"
+	v2 "github.com/x0tf/server/internal/api/v2"
 	"github.com/x0tf/server/internal/shared"
 )
 
 // API represents the REST API
 type API struct {
-	app         *fiber.App
-	Address     string
-	Production  bool
-	Version     string
-	AdminTokens []string
-	Namespaces  shared.NamespaceService
-	Elements    shared.ElementService
-	Invites     shared.InviteService
+	app      *fiber.App
+	Settings *Settings
+	Services *Services
+}
+
+// Settings contains all settings important for the REST API
+type Settings struct {
+	Address           string
+	RequestsPerMinute int
+	Production        bool
+	Version           string
+	AdminTokens       []string
+	InvitesEnabled    bool
+}
+
+// Services contains all services used by the REST API
+type Services struct {
+	Namespaces shared.NamespaceService
+	Elements   shared.ElementService
+	Invites    shared.InviteService
 }
 
 // Serve serves the REST API
 func (api *API) Serve() error {
 	app := fiber.New(fiber.Config{
-		DisableStartupMessage: api.Production,
-		ErrorHandler:          errorHandler,
+		ErrorHandler:          v2.ErrorHandler,
+		DisableKeepalive:      true,
+		DisableStartupMessage: api.Settings.Production,
 	})
 
 	// Include CORS response headers
@@ -46,7 +59,7 @@ func (api *API) Serve() error {
 	app.Use(recov.New())
 
 	// Inject debug middlewares if the application runs in development mode
-	if !api.Production {
+	if !api.Settings.Production {
 		app.Use(logger.New())
 		app.Use(pprof.New())
 	}
@@ -54,9 +67,9 @@ func (api *API) Serve() error {
 	// Inject the rate limiter middleware
 	app.Use(limiter.New(limiter.Config{
 		Next: func(_ *fiber.Ctx) bool {
-			return !api.Production
+			return !api.Settings.Production
 		},
-		Max: 60,
+		Max: api.Settings.RequestsPerMinute,
 		LimitReached: func(ctx *fiber.Ctx) error {
 			return fiber.ErrTooManyRequests
 		},
@@ -64,65 +77,41 @@ func (api *API) Serve() error {
 
 	// Inject the application data
 	app.Use(func(ctx *fiber.Ctx) error {
-		ctx.Locals("__production", api.Production)
-		ctx.Locals("__version", api.Version)
-		ctx.Locals("__namespaces", api.Namespaces)
-		ctx.Locals("__elements", api.Elements)
-		if api.Invites != nil {
-			ctx.Locals("__invites", api.Invites)
-		}
-		ctx.Locals("__admin_tokens", api.AdminTokens)
+		ctx.Locals("__settings_address", api.Settings.Address)
+		ctx.Locals("__settings_requests_per_minute", api.Settings.RequestsPerMinute)
+		ctx.Locals("__settings_production", api.Settings.Production)
+		ctx.Locals("__settings_version", api.Settings.Version)
+		ctx.Locals("__settings_admin_tokens", api.Settings.AdminTokens)
+		ctx.Locals("__settings_invites_enabled", api.Settings.InvitesEnabled)
+
+		ctx.Locals("__services_namespaces", api.Services.Namespaces)
+		ctx.Locals("__services_elements", api.Services.Elements)
+		ctx.Locals("__services_invites", api.Services.Invites)
+
 		return ctx.Next()
 	})
 
-	// Route the v1 API endpoints
-	v1router := app.Group("/v1")
+	// Mark the v1 API as replaced
+	app.All("/v1/*", func(ctx *fiber.Ctx) error {
+		return ctx.Status(fiber.StatusNotFound).SendString("API version v1 has been replaced by version v2")
+	})
+
+	// Route the v2 API endpoints
+	v2group := app.Group("/v2")
 	{
-		v1router.Get("/info", v1.EndpointGetInfo)
+		v2group.Get("/info", v2.EndpointGetInfo)
 
-		// Register the invite endpoints if required
-		if api.Invites != nil {
-			v1router.Get("/invites", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointListInvites)
-			v1router.Get("/invites/:code", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointValidateInvite)
-			v1router.Post("/invites/:code?", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointCreateInvite)
-			v1router.Delete("/invites/:code", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointDeleteInvite)
-		}
-
-		// Register the namespace endpoints
-		v1router.Get("/namespaces", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointListNamespaces)
-		v1router.Get("/namespaces/:namespace", v1.MiddlewareInjectNamespace, v1.EndpointGetNamespace)
-		v1router.Post("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.EndpointCreateNamespace)
-		v1router.Post("/namespaces/:namespace/resetToken", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointResetNamespaceToken)
-		v1router.Post("/namespaces/:namespace/deactivate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointDeactivateNamespace)
-		v1router.Post("/namespaces/:namespace/activate", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.MiddlewareInjectNamespace, v1.EndpointActivateNamespace)
-		v1router.Delete("/namespaces/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointDeleteNamespace)
-
-		// Register the element endpoints
-		v1router.Get("/elements", v1.MiddlewareAdminAuth, v1.MiddlewareRequireAdminAuth, v1.EndpointListElements)
-		v1router.Get("/elements/:namespace", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointListNamespaceElements)
-		v1router.Get("/elements/:namespace/:key", v1.MiddlewareInjectNamespace, v1.EndpointGetElement)
-		v1router.Post("/elements/:namespace/paste/:key?", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointCreatePasteElement)
-		v1router.Post("/elements/:namespace/redirect/:key?", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointCreateRedirectElement)
-		v1router.Delete("/elements/:namespace/:key", v1.MiddlewareAdminAuth, v1.MiddlewareInjectNamespace, v1.MiddlewareTokenAuth, v1.EndpointDeleteElement)
+		v2group.Get("/namespaces", v2.MiddlewareAdminAuth(true), v2.EndpointGetNamespaces)
+		v2group.Get("/namespaces/:namespace_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointGetNamespace)
 	}
 
-	log.WithField("address", api.Address).Info("Serving the REST API")
+	log.WithField("address", api.Settings.Address).Info("Serving the REST API")
 	api.app = app
-	return app.Listen(api.Address)
+	return app.Listen(api.Settings.Address)
 }
 
 // Shutdown gracefully shuts down the REST API
 func (api *API) Shutdown() error {
 	log.Info("Shutting down the REST API")
 	return api.app.Shutdown()
-}
-
-func errorHandler(ctx *fiber.Ctx, err error) error {
-	code := fiber.StatusInternalServerError
-	if fiberError, ok := err.(*fiber.Error); ok {
-		code = fiberError.Code
-	}
-	return ctx.Status(code).JSON(fiber.Map{
-		"messages": []string{err.Error()},
-	})
 }

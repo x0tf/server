@@ -9,64 +9,50 @@ import (
 	"github.com/x0tf/server/internal/shared"
 )
 
-// ElementService represents the postgres element service
-type ElementService struct {
+// elementService represents the postgres element service implementation
+type elementService struct {
 	pool *pgxpool.Pool
 }
 
-// NewElementService creates a new postgres element service
-func NewElementService(dsn string) (*ElementService, error) {
-	// Open a postgres connection pool
-	pool, err := pgxpool.Connect(context.Background(), dsn)
-	if err != nil {
-		return nil, err
+// Count counts the total amount of elements
+func (service *elementService) Count() (int, error) {
+	query := "SELECT COUNT(*) FROM elements"
+
+	row := service.pool.QueryRow(context.Background(), query)
+
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, err
 	}
-
-	// Create and return the element service
-	return &ElementService{
-		pool: pool,
-	}, nil
+	return count, nil
 }
 
-// InitializeTable initializes the element table
-func (service *ElementService) InitializeTable() error {
-	query := fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s (
-			namespace VARCHAR(32) NOT NULL,
-			key VARCHAR(32) NOT NULL,
-			type SMALLINT NOT NULL,
-			data TEXT NOT NULL,
-			PRIMARY KEY (namespace, key)
-		)
-    `, tableElements)
-	_, err := service.pool.Exec(context.Background(), query)
-	return err
-}
+// Element retrieves an element with a specific key out of a specific namespace
+func (service *elementService) Element(namespace, key string) (*shared.Element, error) {
+	query := "SELECT * FROM elements WHERE namespace = $1 AND key = $2"
 
-// Element searches for a single element with a specific key in a specific namespace
-func (service *ElementService) Element(sourceNamespace, sourceKey string) (*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1 AND key = $2", tableElements)
-	element, err := rowToElement(service.pool.QueryRow(context.Background(), query, sourceNamespace, sourceKey))
+	element, err := rowToElement(service.pool.QueryRow(context.Background(), query, namespace, key))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, err
 	}
+
 	return element, nil
 }
 
-// Elements searches for all elements
-func (service *ElementService) Elements() ([]*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM %s", tableElements)
+// Elements retrieves a list of elements using the given limit and offset
+func (service *elementService) Elements(limit, offset int) ([]*shared.Element, error) {
+	query := fmt.Sprintf("SELECT * FROM elements ORDER BY created LIMIT %d OFFSET %d", limit, offset)
+
 	rows, err := service.pool.Query(context.Background(), query)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return []*shared.Element{}, nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
 
 	var elements []*shared.Element
 	for rows.Next() {
@@ -76,20 +62,21 @@ func (service *ElementService) Elements() ([]*shared.Element, error) {
 		}
 		elements = append(elements, element)
 	}
+
 	return elements, nil
 }
 
-// ElementsInNamespace searches for all elements in a specific namespace
-func (service *ElementService) ElementsInNamespace(namespace string) ([]*shared.Element, error) {
-	query := fmt.Sprintf("SELECT * FROM %s WHERE namespace = $1", tableElements)
+// ElementsInNamespace retrieves a list of elements inside a specific namespace using the given limit and offset
+func (service *elementService) ElementsInNamespace(namespace string, limit, offset int) ([]*shared.Element, error) {
+	query := fmt.Sprintf("SELECT * FROM elements WHERE namespace = $1 ORDER BY created LIMIT %d OFFSET %d", limit, offset)
+
 	rows, err := service.pool.Query(context.Background(), query, namespace)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return []*shared.Element{}, nil
 		}
 		return nil, err
 	}
-	defer rows.Close()
 
 	var elements []*shared.Element
 	for rows.Next() {
@@ -99,57 +86,86 @@ func (service *ElementService) ElementsInNamespace(namespace string) ([]*shared.
 		}
 		elements = append(elements, element)
 	}
+
 	return elements, nil
 }
 
 // CreateOrReplace creates or replaces an element
-func (service *ElementService) CreateOrReplace(element *shared.Element) error {
-	query := fmt.Sprintf(`
-		INSERT INTO %s (namespace, key, type, data)
-		VALUES ($1, $2, $3, $4)
+func (service *elementService) CreateOrReplace(element *shared.Element) error {
+	query := `
+		INSERT INTO elements (namespace, key, type, internal_data, public_data, views, max_views, valid_from, valid_until, created)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (namespace, key) DO UPDATE
 			SET type = excluded.type,
-				data = excluded.data
-    `, tableElements)
-	_, err := service.pool.Exec(context.Background(), query, element.Namespace, element.Key, element.Type, element.Data)
+				internal_data = excluded.internal_data,
+				public_data = excluded.public_data,
+				views = excluded.views,
+				max_views = excluded.max_views,
+				valid_from = excluded.valid_from,
+				valid_until = excluded.valid_until,
+				created = excluded.created
+	`
+
+	_, err := service.pool.Exec(
+		context.Background(),
+		query,
+		element.Namespace,
+		element.Key,
+		element.Type,
+		element.InternalData,
+		element.PublicData,
+		element.Views,
+		element.MaxViews,
+		element.ValidFrom,
+		element.ValidUntil,
+		element.Created,
+	)
 	return err
 }
 
-// Delete deletes an element
-func (service *ElementService) Delete(namespace, key string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE namespace = $1 AND key = $2", tableElements)
+// Delete deletes an element with a specific key out of a specific namespace
+func (service *elementService) Delete(namespace, key string) error {
+	query := "DELETE FROM elements WHERE namespace = $1 AND key = $2"
+
 	_, err := service.pool.Exec(context.Background(), query, namespace, key)
 	return err
 }
 
-// DeleteInNamespace deletes every element in a namespace
-func (service *ElementService) DeleteInNamespace(namespace string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE namespace = $1", tableElements)
+// DeleteInNamespace deletes all elements out of a specific namespace
+func (service *elementService) DeleteInNamespace(namespace string) error {
+	query := "DELETE FROM elements WHERE namespace = $1"
+
 	_, err := service.pool.Exec(context.Background(), query, namespace)
 	return err
 }
 
-// Close closes the postgres element service
-func (service *ElementService) Close() {
-	service.pool.Close()
-}
-
-// rowToElement creates an element from a postgres row
+// rowToElement reads a pgx row into an element instance
 func rowToElement(row pgx.Row) (*shared.Element, error) {
 	var namespace string
 	var key string
 	var typ shared.ElementType
-	var data string
+	var internalData map[string]interface{}
+	var publicData map[string]interface{}
+	var views int
+	var maxViews int
+	var validFrom int64
+	var validUntil int64
+	var created int64
 
-	err := row.Scan(&namespace, &key, &typ, &data)
-	if err != nil {
+	if err := row.Scan(&namespace, &key, &typ, &internalData, &publicData, &views, &maxViews, &validFrom, &validUntil, &created); err != nil {
 		return nil, err
 	}
 
 	return &shared.Element{
-		Namespace: namespace,
-		Key:       key,
-		Type:      typ,
-		Data:      data,
+		Namespace:    namespace,
+		Key:          key,
+		Type:         typ,
+		InternalData: internalData,
+		PublicData:   publicData,
+		Views:        views,
+		MaxViews:     maxViews,
+		ValidFrom:    validFrom,
+		ValidUntil:   validUntil,
+		Created:      created,
 	}, nil
 }

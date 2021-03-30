@@ -19,51 +19,31 @@ func main() {
 		log.Info("NOTE: No .env file was found. This is no error and the application will use the systems environment variables.")
 	}
 
-	// Initialize the namespace service
-	namespaces, err := postgres.NewNamespaceService(cfg.DatabaseDSN)
+	// Initialize the database driver
+	driver, err := postgres.NewDriver(cfg.DatabaseDSN)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err = namespaces.InitializeTable(); err != nil {
+	if err := driver.Migrate(); err != nil {
 		log.Fatal(err)
 	}
-	defer namespaces.Close()
-
-	// Initialize the element service
-	elements, err := postgres.NewElementService(cfg.DatabaseDSN)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = elements.InitializeTable(); err != nil {
-		log.Fatal(err)
-	}
-	defer elements.Close()
-
-	// Initialize the invite service if invites are activated
-	var invites *postgres.InviteService
-	if cfg.Invites {
-		invites, err = postgres.NewInviteService(cfg.DatabaseDSN)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err = invites.InitializeTable(); err != nil {
-			log.Fatal(err)
-		}
-		defer invites.Close()
-	}
+	defer driver.Close()
 
 	// Start up the REST API
 	restApi := &api.API{
-		Address:     cfg.APIAddress,
-		Production:  static.ApplicationMode == "PROD",
-		Version:     static.ApplicationVersion,
-		Namespaces:  namespaces,
-		Elements:    elements,
-		Invites:     invites,
-		AdminTokens: cfg.AdminTokens,
-	}
-	if invites == nil {
-		restApi.Invites = nil
+		Settings: &api.Settings{
+			Address:           cfg.APIAddress,
+			RequestsPerMinute: cfg.APIRequestsPerMinute,
+			Production:        static.ApplicationMode == "PROD",
+			Version:           static.ApplicationVersion,
+			AdminTokens:       cfg.AdminTokens,
+			InvitesEnabled:    cfg.Invites,
+		},
+		Services: &api.Services{
+			Namespaces: driver.Namespaces,
+			Elements:   driver.Elements,
+			Invites:    driver.Invites,
+		},
 	}
 	go func() {
 		if err := restApi.Serve(); err != nil {
@@ -75,8 +55,8 @@ func main() {
 	gw := &gateway.Gateway{
 		Address:      cfg.GatewayAddress,
 		Production:   static.ApplicationMode == "PROD",
-		Namespaces:   namespaces,
-		Elements:     elements,
+		Namespaces:   driver.Namespaces,
+		Elements:     driver.Elements,
 		RootRedirect: cfg.GatewayRootRedirect,
 	}
 	go func() {
