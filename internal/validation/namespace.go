@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"fmt"
 	"strings"
 	"unicode/utf8"
 )
@@ -17,31 +16,34 @@ var (
 	namespaceIDAllowedCharacters = "abcdefghijklmnopqrstuvwxyz0123456789_"
 )
 
-var (
-	// ErrNamespaceIDTooShort is used when a namespace ID is too short
-	ErrNamespaceIDTooShort = fmt.Errorf("the given namespace ID is too short (minimum is %d)", namespaceIDMinimumLength)
+// NamespaceIDViolation represents a violation of given namespace ID rules
+type NamespaceIDViolation string
 
-	// ErrNamespaceIDTooShort is used when a namespace ID is too long
-	ErrNamespaceIDTooLong = fmt.Errorf("the given namespace ID is too long (maximum is %d)", namespaceIDMaximumLength)
+const (
+	// NamespaceIDViolationMinimumLength is used when a namespace ID is too short
+	NamespaceIDViolationMinimumLength = NamespaceIDViolation("MINIMUM_LENGTH")
 
-	// ErrNamespaceIDTooShort is used when a namespace ID contains at least one illegal character
-	ErrNamespaceIDContainsIllegalCharacter = fmt.Errorf("the given namespace ID contains an illegal character (allowed are '%s')", namespaceIDAllowedCharacters)
+	// NamespaceIDViolationMaximumLength is used when a namespace ID is too long
+	NamespaceIDViolationMaximumLength = NamespaceIDViolation("MAXIMUM_LENGTH")
+
+	// NamespaceIDViolationCharacters is used when a namespace ID contains illegal characters
+	NamespaceIDViolationCharacters = NamespaceIDViolation("CHARACTERS")
 )
 
 // ValidateNamespaceID validates a given namespace ID
-func ValidateNamespaceID(id string) (errors []error) {
+func ValidateNamespaceID(id string) (violations []NamespaceIDViolation) {
 	// Validate the length of the ID
 	length := utf8.RuneCountInString(id)
 	if length < namespaceIDMinimumLength {
-		errors = append(errors, ErrNamespaceIDTooShort)
+		violations = append(violations, NamespaceIDViolationMinimumLength)
 	} else if length > namespaceIDMaximumLength {
-		errors = append(errors, ErrNamespaceIDTooLong)
+		violations = append(violations, NamespaceIDViolationMaximumLength)
 	}
 
 	// Validate the strings characters
 	for _, char := range []rune(id) {
 		if !strings.ContainsRune(namespaceIDAllowedCharacters, char) {
-			errors = append(errors, ErrNamespaceIDContainsIllegalCharacter)
+			violations = append(violations, NamespaceIDViolationCharacters)
 			break
 		}
 	}

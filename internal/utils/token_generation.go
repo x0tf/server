@@ -1,12 +1,13 @@
 package utils
 
-// tokenLength represents the length of a token
-var tokenLength = 64
+var (
+	// tokenLength represents the length of a token
+	tokenLength = 64
 
-// tokenCharacters represents the characters a token may contain
-var tokenCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-#*"
-
-var tokenCharactersRunes = []rune(tokenCharacters)
+	// tokenCharacters represents the characters a token may contain
+	tokenCharacters      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-#*"
+	tokenCharactersRunes = []rune(tokenCharacters)
+)
 
 // GenerateToken generates a new token
 func GenerateToken() string {

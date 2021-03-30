@@ -1,12 +1,13 @@
 package utils
 
-// elementKeyLength represents the length of an element key
-var elementKeyLength = 8
+var (
+	// elementKeyLength represents the length of an element key
+	elementKeyLength = 8
 
-// elementKeyCharacters represents the characters an element key may contain
-var elementKeyCharacters = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-var elementKeyCharactersRunes = []rune(elementKeyCharacters)
+	// elementKeyCharacters represents the characters an element key may contain
+	elementKeyCharacters      = "abcdefghijklmnopqrstuvwxyz0123456789"
+	elementKeyCharactersRunes = []rune(elementKeyCharacters)
+)
 
 // GenerateElementKey generates a new element key
 func GenerateElementKey() string {

@@ -3,6 +3,10 @@ package v2
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/x0tf/server/internal/shared"
+	"github.com/x0tf/server/internal/token"
+	"github.com/x0tf/server/internal/utils"
+	"github.com/x0tf/server/internal/validation"
+	"time"
 )
 
 // EndpointGetNamespaces handles the 'GET /v2/namespaces?limit=0&skip=10' endpoint
@@ -53,4 +57,60 @@ func EndpointGetNamespace(ctx *fiber.Ctx) error {
 	namespace := *(ctx.Locals("_namespace").(*shared.Namespace))
 	namespace.Token = ""
 	return ctx.JSON(namespace)
+}
+
+type endpointCreateNamespaceRequestBody struct {
+	ID string `json:"id" xml:"id" form:"id"`
+}
+
+// EndpointCreateNamespace handles the 'POST /v2/namespaces' endpoint
+func EndpointCreateNamespace(ctx *fiber.Ctx) error {
+	// Extract required services
+	namespaces := ctx.Locals("__services_namespaces").(shared.NamespaceService)
+
+	// Try to parse the body into a request body struct
+	body := new(endpointCreateNamespaceRequestBody)
+	if err := ctx.BodyParser(body); err != nil {
+		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, err.Error(), nil)
+	}
+
+	// Validate the given ID
+	violations := validation.ValidateNamespaceID(body.ID)
+	if len(violations) > 0 {
+		return newError(fiber.StatusUnprocessableEntity, errorCodeNamespaceIllegalNamespaceID, "illegal namespace ID", fiber.Map{
+			"violations": violations,
+		})
+	}
+
+	// Check if a namespace with that ID already exists
+	found, err := namespaces.Namespace(body.ID)
+	if err != nil {
+		return err
+	}
+	if found != nil {
+		return newError(fiber.StatusConflict, errorCodeNamespaceNamespaceIDInUse, "namespace ID in use", nil)
+	}
+
+	// Create a new token for the namespace
+	generatedToken := utils.GenerateToken()
+	hashedToken, err := token.Hash(generatedToken)
+	if err != nil {
+		return err
+	}
+
+	// Create a namespace instance with default values and take a copy from it to include the raw token
+	namespace := &shared.Namespace{
+		ID:      body.ID,
+		Token:   hashedToken,
+		Active:  true,
+		Created: time.Now().Unix(),
+	}
+	copy := *namespace
+	copy.Token = generatedToken
+
+	// Insert the created instance into the database and respond with the copy
+	if err := namespaces.CreateOrReplace(namespace); err != nil {
+		return err
+	}
+	return ctx.Status(fiber.StatusCreated).JSON(copy)
 }

@@ -4,5 +4,9 @@ const (
 	errorCodeGenericUnexpectedError   = 1000
 	errorCodeGenericUnauthorized      = 1001
 	errorCodeGenericBadQueryParameter = 1002
-	errorCodeGenericNamespaceNotFound = 1003
+	errorCodeGenericBadRequestBody    = 1003
+	errorCodeGenericNamespaceNotFound = 1004
+
+	errorCodeNamespaceIllegalNamespaceID = 2000
+	errorCodeNamespaceNamespaceIDInUse   = 2001
 )
