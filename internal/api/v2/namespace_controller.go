@@ -171,3 +171,22 @@ func EndpointResetNamespaceToken(ctx *fiber.Ctx) error {
 	}
 	return ctx.JSON(copy)
 }
+
+// EndpointDeleteNamespace handles the 'DELETE /v2/namespaces/:namespace_id' endpoint
+func EndpointDeleteNamespace(ctx *fiber.Ctx) error {
+	// Extract required services
+	namespaces := ctx.Locals("__services_namespaces").(shared.NamespaceService)
+	elements := ctx.Locals("__services_elements").(shared.ElementService)
+
+	// Extract required resources
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+
+	// Delete the elements of the namespace and the namespace itself
+	if err := elements.DeleteInNamespace(namespace.ID); err != nil {
+		return err
+	}
+	if err := namespaces.Delete(namespace.ID); err != nil {
+		return err
+	}
+	return ctx.SendStatus(fiber.StatusOK)
+}
