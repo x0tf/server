@@ -140,5 +140,7 @@ func EndpointPatchNamespace(ctx *fiber.Ctx) error {
 	if err := namespaces.CreateOrReplace(namespace); err != nil {
 		return err
 	}
-	return ctx.JSON(namespace)
+	copy := *namespace
+	copy.Token = ""
+	return ctx.JSON(copy)
 }
