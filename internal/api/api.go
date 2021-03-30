@@ -105,6 +105,7 @@ func (api *API) Serve() error {
 		v2group.Get("/namespaces/:namespace_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointGetNamespace)
 		v2group.Post("/namespaces", v2.EndpointCreateNamespace)
 		v2group.Patch("/namespaces/:namespace_id", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectNamespace(false), v2.EndpointPatchNamespace)
+		v2group.Post("/namespaces/:namespace_id/reset_token", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointResetNamespaceToken)
 	}
 
 	log.WithField("address", api.Settings.Address).Info("Serving the REST API")

@@ -144,3 +144,30 @@ func EndpointPatchNamespace(ctx *fiber.Ctx) error {
 	copy.Token = ""
 	return ctx.JSON(copy)
 }
+
+// EndpointResetNamespaceToken handles the 'POST /v2/namespaces/:namespace_id/reset_token' endpoint
+func EndpointResetNamespaceToken(ctx *fiber.Ctx) error {
+	// Extract required services
+	namespaces := ctx.Locals("__services_namespaces").(shared.NamespaceService)
+
+	// Extract required resources
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+
+	// Create a new token for the namespace
+	generatedToken := utils.GenerateToken()
+	hashedToken, err := token.Hash(generatedToken)
+	if err != nil {
+		return err
+	}
+
+	// Update the namespace object and take a copy from it to include the raw token
+	namespace.Token = hashedToken
+	copy := *namespace
+	copy.Token = generatedToken
+
+	// Update the namespace inside the database and respond with the copy
+	if err := namespaces.CreateOrReplace(namespace); err != nil {
+		return err
+	}
+	return ctx.JSON(copy)
+}
