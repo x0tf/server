@@ -71,7 +71,7 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Try to parse the body into a request body struct
 	body := new(endpointCreateNamespaceRequestBody)
 	if err := ctx.BodyParser(body); err != nil {
-		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, err.Error(), nil)
+		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, "invalid request body", nil)
 	}
 
 	// Validate the given ID
@@ -113,4 +113,32 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 		return err
 	}
 	return ctx.Status(fiber.StatusCreated).JSON(copy)
+}
+
+type endpointPatchNamespaceRequestBody struct {
+	Active *bool `json:"active" xml:"active" form:"active"`
+}
+
+// EndpointPatchNamespace handles the 'PATCH /v2/namespaces/:namespace_id' endpoint
+func EndpointPatchNamespace(ctx *fiber.Ctx) error {
+	// Extract required services
+	namespaces := ctx.Locals("__services_namespaces").(shared.NamespaceService)
+
+	// Extract required resources
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+
+	// Try to parse the body into a request body struct
+	body := new(endpointPatchNamespaceRequestBody)
+	if err := ctx.BodyParser(body); err != nil {
+		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, "invalid request body", nil)
+	}
+
+	// Update the namespace accordingly
+	if body.Active != nil {
+		namespace.Active = *body.Active
+	}
+	if err := namespaces.CreateOrReplace(namespace); err != nil {
+		return err
+	}
+	return ctx.JSON(namespace)
 }
