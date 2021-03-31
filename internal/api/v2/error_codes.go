@@ -10,4 +10,7 @@ const (
 
 	errorCodeNamespaceIllegalNamespaceID = 2000
 	errorCodeNamespaceNamespaceIDInUse   = 2001
+
+	errorCodeElementElementKeyInUse   = 3000
+	errorCodeElementEmptyPasteContent = 3001
 )
