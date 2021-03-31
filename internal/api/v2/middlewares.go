@@ -70,3 +70,19 @@ func MiddlewareInjectNamespace(handleAuth bool) fiber.Handler {
 		return ctx.Next()
 	}
 }
+
+// MiddlewareInjectElement handles element injection
+func MiddlewareInjectElement(ctx *fiber.Ctx) error {
+	// Retrieve and inject the requested element
+	elements := ctx.Locals("__services_elements").(shared.ElementService)
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+	element, err := elements.Element(namespace.ID, strings.ToLower(ctx.Params("element_id")))
+	if err != nil {
+		return err
+	}
+	if element == nil {
+		return newError(fiber.StatusNotFound, errorCodeGenericElementNotFound, "element not found", nil)
+	}
+	ctx.Locals("_element", element)
+	return ctx.Next()
+}

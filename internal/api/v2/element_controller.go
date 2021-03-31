@@ -93,3 +93,10 @@ func EndpointGetNamespaceElements(ctx *fiber.Ctx) error {
 		},
 	})
 }
+
+// EndpointGetElement handles the 'GET /v2/elements/:namespace_id/:element_id' endpoint
+func EndpointGetElement(ctx *fiber.Ctx) error {
+	element := *(ctx.Locals("_element").(*shared.Element))
+	element.InternalData = map[string]interface{}{}
+	return ctx.JSON(element)
+}
