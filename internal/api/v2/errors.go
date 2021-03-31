@@ -16,7 +16,8 @@ const (
 	errorCodeNamespaceIllegalNamespaceID = 2000
 	errorCodeNamespaceNamespaceIDInUse   = 2001
 
-	errorCodeElementElementKeyInUse = 3000
+	errorCodeElementElementKeyInUse      = 3000
+	errorCodeElementNamespaceDeactivated = 3001
 
 	errorCodeElementPasteEmptyPasteContent = 3100
 
@@ -53,6 +54,8 @@ var (
 	errorNamespaceNamespaceIDInUse = newError(fiber.StatusConflict, errorCodeNamespaceNamespaceIDInUse, "namespace ID in use", nil)
 
 	errorElementElementKeyInUse = newError(fiber.StatusConflict, errorCodeElementElementKeyInUse, "element key in use", nil)
+
+	errorElementNamespaceDeactivated = newError(fiber.StatusForbidden, errorCodeElementNamespaceDeactivated, "this namespace is deactivated", nil)
 
 	errorElementPasteEmptyPasteContent = newError(fiber.StatusUnprocessableEntity, errorCodeElementPasteEmptyPasteContent, "empty paste content", nil)
 

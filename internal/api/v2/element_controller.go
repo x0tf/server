@@ -119,7 +119,13 @@ func EndpointCreatePasteElement(ctx *fiber.Ctx) error {
 	elements := ctx.Locals("__services_elements").(shared.ElementService)
 
 	// Extract required resources
+	isAdmin := ctx.Locals("_is_admin").(bool)
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+
+	// Check if the namespace is active
+	if !namespace.Active && !isAdmin {
+		return errorElementNamespaceDeactivated
+	}
 
 	// Try to parse the body into a request body struct
 	body := new(endpointCreatePasteElementRequestBody)
@@ -211,7 +217,13 @@ func EndpointCreateRedirectElement(ctx *fiber.Ctx) error {
 	elements := ctx.Locals("__services_elements").(shared.ElementService)
 
 	// Extract required resources
+	isAdmin := ctx.Locals("_is_admin").(bool)
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+
+	// Check if the namespace is active
+	if !namespace.Active && !isAdmin {
+		return errorElementNamespaceDeactivated
+	}
 
 	// Try to parse the body into a request body struct
 	body := new(endpointCreateRedirectElementRequestBody)
