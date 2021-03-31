@@ -53,11 +53,15 @@ func main() {
 
 	// Start up the gateway
 	gw := &gateway.Gateway{
-		Address:      cfg.GatewayAddress,
-		Production:   static.ApplicationMode == "PROD",
-		Namespaces:   driver.Namespaces,
-		Elements:     driver.Elements,
-		RootRedirect: cfg.GatewayRootRedirect,
+		Settings: &gateway.Settings{
+			Address:      cfg.GatewayAddress,
+			Production:   static.ApplicationMode == "PROD",
+			RootRedirect: cfg.GatewayRootRedirect,
+		},
+		Services: &gateway.Services{
+			Namespaces: driver.Namespaces,
+			Elements:   driver.Elements,
+		},
 	}
 	go func() {
 		if err := gw.Serve(); err != nil {

@@ -6,55 +6,66 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
 	log "github.com/sirupsen/logrus"
+	"github.com/x0tf/server/internal/gateway/handler"
 	"github.com/x0tf/server/internal/shared"
 )
 
 // Gateway represents the element-exposing gateway
 type Gateway struct {
-	app          *fiber.App
+	app      *fiber.App
+	Settings *Settings
+	Services *Services
+}
+
+// Settings contains all settings important for the gateway
+type Settings struct {
 	Address      string
 	Production   bool
-	Namespaces   shared.NamespaceService
-	Elements     shared.ElementService
 	RootRedirect string
+}
+
+// Services contains all services used by the gateway
+type Services struct {
+	Namespaces shared.NamespaceService
+	Elements   shared.ElementService
 }
 
 // Serve serves the gateway
 func (gateway *Gateway) Serve() error {
 	app := fiber.New(fiber.Config{
-		DisableStartupMessage: gateway.Production,
+		DisableKeepalive:      true,
+		DisableStartupMessage: gateway.Settings.Production,
 	})
 
 	// Enable panic recovering
 	app.Use(recov.New())
 
 	// Inject debug middlewares if the application runs in development mode
-	if !gateway.Production {
+	if !gateway.Settings.Production {
 		app.Use(logger.New())
 		app.Use(pprof.New())
 	}
 
 	// Inject the application data
 	app.Use(func(ctx *fiber.Ctx) error {
-		ctx.Locals("__namespaces", gateway.Namespaces)
-		ctx.Locals("__elements", gateway.Elements)
+		ctx.Locals("__services_namespaces", gateway.Services.Namespaces)
+		ctx.Locals("__services_elements", gateway.Services.Elements)
+
 		return ctx.Next()
 	})
 
-	app.Get("/:namespace/:key?", func(ctx *fiber.Ctx) error {
-		return ctx.Status(fiber.StatusNotImplemented).SendString("gateway method not implemented")
-	})
+	app.Get("/:namespace_id/:element_key?", handler.Entrypoint)
 
 	// Define the root redirect
-	if gateway.RootRedirect != "" {
+	if gateway.Settings.RootRedirect != "" {
 		app.Get("/", func(ctx *fiber.Ctx) error {
-			return ctx.Redirect(gateway.RootRedirect, fiber.StatusPermanentRedirect)
+			return ctx.Redirect(gateway.Settings.RootRedirect, fiber.StatusPermanentRedirect)
 		})
 	}
 
-	log.WithField("address", gateway.Address).Info("Serving the gateway")
+	log.WithField("address", gateway.Settings.Address).Info("Serving the gateway")
 	gateway.app = app
-	return app.Listen(gateway.Address)
+	return app.Listen(gateway.Settings.Address)
 }
 
 // Shutdown gracefully shuts down the gateway
