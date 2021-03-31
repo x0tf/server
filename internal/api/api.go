@@ -103,7 +103,7 @@ func (api *API) Serve() error {
 
 		v2group.Get("/namespaces", v2.MiddlewareAdminAuth(true), v2.EndpointGetNamespaces)
 		v2group.Get("/namespaces/:namespace_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointGetNamespace)
-		v2group.Post("/namespaces", v2.EndpointCreateNamespace)
+		v2group.Post("/namespaces", v2.MiddlewareAdminAuth(false), v2.EndpointCreateNamespace)
 		v2group.Patch("/namespaces/:namespace_id", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectNamespace(false), v2.EndpointPatchNamespace)
 		v2group.Post("/namespaces/:namespace_id/reset_token", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointResetNamespaceToken)
 		v2group.Delete("/namespaces/:namespace_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointDeleteNamespace)
@@ -122,6 +122,8 @@ func (api *API) Serve() error {
 			v2group.Post("/invites", v2.MiddlewareAdminAuth(true), v2.EndpointCreateInvite)
 			v2group.Patch("/invites/:invite_code", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectInvite, v2.EndpointPatchInvite)
 			v2group.Delete("/invites/:invite_code", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectInvite, v2.EndpointDeleteInvite)
+		} else {
+			v2group.All("/invites/*", v2.EndpointInvitesDisabled)
 		}
 	}
 

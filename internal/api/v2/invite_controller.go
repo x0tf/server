@@ -169,3 +169,8 @@ func EndpointDeleteInvite(ctx *fiber.Ctx) error {
 	// Delete the invite
 	return invites.Delete(invite.Code)
 }
+
+// EndpointInvitesDisabled handles all requests to invite endpoints if invites are disabled on this instance
+func EndpointInvitesDisabled(_ *fiber.Ctx) error {
+	return errorInviteInvitesDisabled
+}

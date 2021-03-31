@@ -60,7 +60,8 @@ func EndpointGetNamespace(ctx *fiber.Ctx) error {
 }
 
 type endpointCreateNamespaceRequestBody struct {
-	ID string `json:"id" xml:"id" form:"id"`
+	ID         string `json:"id" xml:"id" form:"id"`
+	InviteCode string `json:"invite_code" xml:"invite_code" form:"invite_code"`
 }
 
 // EndpointCreateNamespace handles the 'POST /v2/namespaces' endpoint
@@ -87,6 +88,27 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	}
 	if found != nil {
 		return errorNamespaceNamespaceIDInUse
+	}
+
+	// Cover the potential need of an invite code
+	invitesEnabled := ctx.Locals("__settings_invites_enabled").(bool)
+	isAdmin := ctx.Locals("_is_admin").(bool)
+	if invitesEnabled && !isAdmin {
+		// Retrieve and validate the given invite code
+		invites := ctx.Locals("__services_invites").(shared.InviteService)
+		invite, err := invites.Invite(body.InviteCode)
+		if err != nil {
+			return err
+		}
+		if invite == nil || (invite.MaxUses != -1 && invite.Uses >= invite.MaxUses) {
+			return errorNamespaceInvalidInviteCode
+		}
+
+		// Update the amount of uses of the invite
+		invite.Uses++
+		if err := invites.CreateOrReplace(invite); err != nil {
+			return err
+		}
 	}
 
 	// Create a new token for the namespace

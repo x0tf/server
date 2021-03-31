@@ -16,15 +16,15 @@ const (
 
 	errorCodeNamespaceIllegalNamespaceID = 2000
 	errorCodeNamespaceNamespaceIDInUse   = 2001
+	errorCodeNamespaceInvalidInviteCode  = 2002
 
-	errorCodeElementElementKeyInUse      = 3000
-	errorCodeElementNamespaceDeactivated = 3001
-
-	errorCodeElementPasteEmptyPasteContent = 3100
-
+	errorCodeElementElementKeyInUse          = 3000
+	errorCodeElementNamespaceDeactivated     = 3001
+	errorCodeElementPasteEmptyPasteContent   = 3100
 	errorCodeElementRedirectInvalidTargetURL = 3200
 
-	errorCodeInviteInviteCodeInUse = 4000
+	errorCodeInviteInvitesDisabled = 4000
+	errorCodeInviteInviteCodeInUse = 4001
 )
 
 var (
@@ -58,6 +58,8 @@ var (
 
 	errorNamespaceNamespaceIDInUse = newError(fiber.StatusConflict, errorCodeNamespaceNamespaceIDInUse, "namespace ID in use", nil)
 
+	errorNamespaceInvalidInviteCode = newError(fiber.StatusPreconditionFailed, errorCodeNamespaceInvalidInviteCode, "invalid invite code", nil)
+
 	errorElementElementKeyInUse = newError(fiber.StatusConflict, errorCodeElementElementKeyInUse, "element key in use", nil)
 
 	errorElementNamespaceDeactivated = newError(fiber.StatusForbidden, errorCodeElementNamespaceDeactivated, "this namespace is deactivated", nil)
@@ -65,6 +67,8 @@ var (
 	errorElementPasteEmptyPasteContent = newError(fiber.StatusUnprocessableEntity, errorCodeElementPasteEmptyPasteContent, "empty paste content", nil)
 
 	errorElementRedirectInvalidTargetURL = newError(fiber.StatusUnprocessableEntity, errorCodeElementRedirectInvalidTargetURL, "invalid target URL", nil)
+
+	errorInviteInvitesDisabled = newError(fiber.StatusPreconditionFailed, errorCodeInviteInvitesDisabled, "invites are disabled", nil)
 
 	errorInviteInviteCodeInUse = newError(fiber.StatusConflict, errorCodeInviteInviteCodeInUse, "invite code in use", nil)
 )
