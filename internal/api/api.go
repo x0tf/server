@@ -115,6 +115,10 @@ func (api *API) Serve() error {
 		v2group.Post("/elements/:namespace_id/redirect", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointCreateRedirectElement)
 		v2group.Patch("/elements/:namespace_id/:element_key", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.MiddlewareInjectElement, v2.EndpointPatchElement)
 		v2group.Delete("/elements/:namespace_id/:element_key", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.MiddlewareInjectElement, v2.EndpointDeleteElement)
+
+		if api.Settings.InvitesEnabled {
+			v2group.Get("/invites", v2.MiddlewareAdminAuth(true), v2.EndpointGetInvites)
+		}
 	}
 
 	log.WithField("address", api.Settings.Address).Info("Serving the REST API")
