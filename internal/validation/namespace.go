@@ -6,14 +6,14 @@ import (
 )
 
 var (
-	// namespaceIDMinimumLength represents the minimum length of a namespace ID
-	namespaceIDMinimumLength = 1
+	// NamespaceIDMinimumLength represents the minimum length of a namespace ID
+	NamespaceIDMinimumLength = 1
 
-	// namespaceIDMaximumLength represents the maximum length of a namespace ID
-	namespaceIDMaximumLength = 32
+	// NamespaceIDMaximumLength represents the maximum length of a namespace ID
+	NamespaceIDMaximumLength = 32
 
-	// namespaceIDAllowedCharacters contains all allowed characters for a namespace ID
-	namespaceIDAllowedCharacters = "abcdefghijklmnopqrstuvwxyz0123456789_"
+	// NamespaceIDAllowedCharacters contains all allowed characters for a namespace ID
+	NamespaceIDAllowedCharacters = "abcdefghijklmnopqrstuvwxyz0123456789_"
 )
 
 // NamespaceIDViolation represents a violation of given namespace ID rules
@@ -34,15 +34,15 @@ const (
 func ValidateNamespaceID(id string) (violations []NamespaceIDViolation) {
 	// Validate the length of the ID
 	length := utf8.RuneCountInString(id)
-	if length < namespaceIDMinimumLength {
+	if length < NamespaceIDMinimumLength {
 		violations = append(violations, NamespaceIDViolationMinimumLength)
-	} else if length > namespaceIDMaximumLength {
+	} else if length > NamespaceIDMaximumLength {
 		violations = append(violations, NamespaceIDViolationMaximumLength)
 	}
 
 	// Validate the strings characters
 	for _, char := range []rune(id) {
-		if !strings.ContainsRune(namespaceIDAllowedCharacters, char) {
+		if !strings.ContainsRune(NamespaceIDAllowedCharacters, char) {
 			violations = append(violations, NamespaceIDViolationCharacters)
 			break
 		}
