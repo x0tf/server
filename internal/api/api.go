@@ -109,6 +109,7 @@ func (api *API) Serve() error {
 		v2group.Delete("/namespaces/:namespace_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointDeleteNamespace)
 
 		v2group.Get("/elements", v2.MiddlewareAdminAuth(true), v2.EndpointGetElements)
+		v2group.Get("/elements/:namespace_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointGetNamespaceElements)
 	}
 
 	log.WithField("address", api.Settings.Address).Info("Serving the REST API")
