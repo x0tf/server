@@ -39,3 +39,8 @@ func EndpointGetInvites(ctx *fiber.Ctx) error {
 		},
 	})
 }
+
+// EndpointGetInvite handles the 'GET /v2/invites/:invite_code' endpoint
+func EndpointGetInvite(ctx *fiber.Ctx) error {
+	return ctx.JSON(ctx.Locals("_invite").(*shared.Invite))
+}

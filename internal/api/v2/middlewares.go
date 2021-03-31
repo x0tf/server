@@ -86,3 +86,18 @@ func MiddlewareInjectElement(ctx *fiber.Ctx) error {
 	ctx.Locals("_element", element)
 	return ctx.Next()
 }
+
+// MiddlewareInjectInvite handles invite injection
+func MiddlewareInjectInvite(ctx *fiber.Ctx) error {
+	// Retrieve and inject the requested invite
+	invites := ctx.Locals("__services_invites").(shared.InviteService)
+	invite, err := invites.Invite(strings.ToLower(ctx.Params("invite_code")))
+	if err != nil {
+		return err
+	}
+	if invite == nil {
+		return errorGenericInviteNotFound
+	}
+	ctx.Locals("_invite", invite)
+	return ctx.Next()
+}

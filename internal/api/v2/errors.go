@@ -12,6 +12,7 @@ const (
 	errorCodeGenericBadRequestBody    = 1003
 	errorCodeGenericNamespaceNotFound = 1004
 	errorCodeGenericElementNotFound   = 1005
+	errorCodeGenericInviteNotFound    = 1006
 
 	errorCodeNamespaceIllegalNamespaceID = 2000
 	errorCodeNamespaceNamespaceIDInUse   = 2001
@@ -44,6 +45,8 @@ var (
 	errorGenericNamespaceNotFound = newError(fiber.StatusNotFound, errorCodeGenericNamespaceNotFound, "namespace not found", nil)
 
 	errorGenericElementNotFound = newError(fiber.StatusNotFound, errorCodeGenericElementNotFound, "element not found", nil)
+
+	errorGenericInviteNotFound = newError(fiber.StatusNotFound, errorCodeGenericInviteNotFound, "invite not found", nil)
 
 	errorNamespaceIllegalNamespaceID = func(violations []validation.NamespaceIDViolation) *apiError {
 		return newError(fiber.StatusUnprocessableEntity, errorCodeNamespaceIllegalNamespaceID, "illegal namespace ID", fiber.Map{
