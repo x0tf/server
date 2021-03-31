@@ -353,3 +353,15 @@ func EndpointPatchElement(ctx *fiber.Ctx) error {
 	copy.InternalData = map[string]interface{}{}
 	return ctx.JSON(copy)
 }
+
+// EndpointDeleteElement handles the 'DELETE /v2/elements/:namespace_id/:element_key' endpoint
+func EndpointDeleteElement(ctx *fiber.Ctx) error {
+	// Extract required services
+	elements := ctx.Locals("__services_elements").(shared.ElementService)
+
+	// Extract required resources
+	element := ctx.Locals("_element").(*shared.Element)
+
+	// Delete the element
+	return elements.Delete(element.Namespace, element.Key)
+}
