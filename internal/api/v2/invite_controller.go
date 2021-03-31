@@ -157,3 +157,15 @@ func EndpointPatchInvite(ctx *fiber.Ctx) error {
 	}
 	return ctx.JSON(invite)
 }
+
+// EndpointDeleteInvite handles the 'DELETE /v2/invites/:invite_code' endpoint
+func EndpointDeleteInvite(ctx *fiber.Ctx) error {
+	// Extract required services
+	invites := ctx.Locals("__services_invites").(shared.InviteService)
+
+	// Extract required resources
+	invite := ctx.Locals("_invite").(*shared.Invite)
+
+	// Delete the invite
+	return invites.Delete(invite.Code)
+}

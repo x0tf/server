@@ -121,6 +121,7 @@ func (api *API) Serve() error {
 			v2group.Get("/invites/:invite_code", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectInvite, v2.EndpointGetInvite)
 			v2group.Post("/invites", v2.MiddlewareAdminAuth(true), v2.EndpointCreateInvite)
 			v2group.Patch("/invites/:invite_code", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectInvite, v2.EndpointPatchInvite)
+			v2group.Delete("/invites/:invite_code", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectInvite, v2.EndpointDeleteInvite)
 		}
 	}
 
