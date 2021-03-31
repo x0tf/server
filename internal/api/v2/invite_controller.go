@@ -107,3 +107,53 @@ func EndpointCreateInvite(ctx *fiber.Ctx) error {
 	}
 	return ctx.JSON(invite)
 }
+
+type endpointPatchInviteRequestBody struct {
+	Code    *string `json:"code" xml:"code" form:"code"`
+	MaxUses *int    `json:"max_uses" xml:"max_uses" form:"max_uses"`
+}
+
+// EndpointPatchInvite handles the 'PATCH /v2/invites/:invite_code' endpoint
+func EndpointPatchInvite(ctx *fiber.Ctx) error {
+	// Extract required services
+	invites := ctx.Locals("__services_invites").(shared.InviteService)
+
+	// Extract required resources
+	invite := ctx.Locals("_invite").(*shared.Invite)
+
+	// Try to parse the body into a request body struct
+	body := new(endpointPatchInviteRequestBody)
+	if err := ctx.BodyParser(body); err != nil {
+		return errorGenericBadRequestBody
+	}
+
+	// Validate and update the code of the invite if specified
+	code := invite.Code
+	if body.Code != nil {
+		code = *body.Code
+		found, err := invites.Invite(code)
+		if err != nil {
+			return err
+		}
+		if found != nil {
+			return errorInviteInviteCodeInUse
+		}
+	}
+
+	// Update the maximum amount of uses if specified
+	if body.MaxUses != nil {
+		invite.MaxUses = *body.MaxUses
+	}
+
+	// Update the invite and respond with the updated version of it
+	if code != invite.Code {
+		if err := invites.Delete(invite.Code); err != nil {
+			return err
+		}
+		invite.Code = code
+	}
+	if err := invites.CreateOrReplace(invite); err != nil {
+		return err
+	}
+	return ctx.JSON(invite)
+}
