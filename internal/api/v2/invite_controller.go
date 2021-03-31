@@ -3,6 +3,8 @@ package v2
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/x0tf/server/internal/shared"
+	"github.com/x0tf/server/internal/utils"
+	"time"
 )
 
 // EndpointGetInvites handles the 'GET /v2/invites?limit=0&skip=10' endpoint
@@ -43,4 +45,65 @@ func EndpointGetInvites(ctx *fiber.Ctx) error {
 // EndpointGetInvite handles the 'GET /v2/invites/:invite_code' endpoint
 func EndpointGetInvite(ctx *fiber.Ctx) error {
 	return ctx.JSON(ctx.Locals("_invite").(*shared.Invite))
+}
+
+type endpointCreateInviteRequestBody struct {
+	Code    *string `json:"code" xml:"code" form:"code"`
+	MaxUses *int    `json:"max_uses" xml:"max_uses" form:"max_uses"`
+}
+
+// EndpointCreateInvite handles the 'POST /v2/invites' endpoint
+func EndpointCreateInvite(ctx *fiber.Ctx) error {
+	// Extract required services
+	invites := ctx.Locals("__services_invites").(shared.InviteService)
+
+	// Try to parse the body into a request body struct
+	body := new(endpointCreateInviteRequestBody)
+	if err := ctx.BodyParser(body); err != nil {
+		return errorGenericBadRequestBody
+	}
+
+	// Validate the wished code if one was provided or generate a new one
+	var code string
+	if body.Code != nil {
+		wishedCode := *body.Code
+		found, err := invites.Invite(wishedCode)
+		if err != nil {
+			return err
+		}
+		if found != nil {
+			return errorInviteInviteCodeInUse
+		}
+		code = wishedCode
+	} else {
+		for {
+			generated := utils.GenerateInviteCode()
+			found, err := invites.Invite(generated)
+			if err != nil {
+				return err
+			}
+			if found == nil {
+				code = generated
+				break
+			}
+		}
+	}
+
+	// Define the maximum amount of uses
+	maxUses := -1
+	if body.MaxUses != nil {
+		maxUses = *body.MaxUses
+	}
+
+	// Create and respond with the invite
+	invite := &shared.Invite{
+		Code:    code,
+		Uses:    0,
+		MaxUses: maxUses,
+		Created: time.Now().Unix(),
+	}
+	if err := invites.CreateOrReplace(invite); err != nil {
+		return err
+	}
+	return ctx.JSON(invite)
 }

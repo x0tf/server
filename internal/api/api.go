@@ -119,6 +119,7 @@ func (api *API) Serve() error {
 		if api.Settings.InvitesEnabled {
 			v2group.Get("/invites", v2.MiddlewareAdminAuth(true), v2.EndpointGetInvites)
 			v2group.Get("/invites/:invite_code", v2.MiddlewareAdminAuth(true), v2.MiddlewareInjectInvite, v2.EndpointGetInvite)
+			v2group.Post("/invites", v2.MiddlewareAdminAuth(true), v2.EndpointCreateInvite)
 		}
 	}
 

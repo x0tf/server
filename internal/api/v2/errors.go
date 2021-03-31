@@ -23,6 +23,8 @@ const (
 	errorCodeElementPasteEmptyPasteContent = 3100
 
 	errorCodeElementRedirectInvalidTargetURL = 3200
+
+	errorCodeInviteInviteCodeInUse = 4000
 )
 
 var (
@@ -63,4 +65,6 @@ var (
 	errorElementPasteEmptyPasteContent = newError(fiber.StatusUnprocessableEntity, errorCodeElementPasteEmptyPasteContent, "empty paste content", nil)
 
 	errorElementRedirectInvalidTargetURL = newError(fiber.StatusUnprocessableEntity, errorCodeElementRedirectInvalidTargetURL, "invalid target URL", nil)
+
+	errorInviteInviteCodeInUse = newError(fiber.StatusConflict, errorCodeInviteInviteCodeInUse, "invite code in use", nil)
 )
