@@ -71,15 +71,13 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 	// Try to parse the body into a request body struct
 	body := new(endpointCreateNamespaceRequestBody)
 	if err := ctx.BodyParser(body); err != nil {
-		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, "invalid request body", nil)
+		return errorGenericBadRequestBody
 	}
 
 	// Validate the given ID
 	violations := validation.ValidateNamespaceID(body.ID)
 	if len(violations) > 0 {
-		return newError(fiber.StatusUnprocessableEntity, errorCodeNamespaceIllegalNamespaceID, "illegal namespace ID", fiber.Map{
-			"violations": violations,
-		})
+		return errorNamespaceIllegalNamespaceID(violations)
 	}
 
 	// Check if a namespace with that ID already exists
@@ -88,7 +86,7 @@ func EndpointCreateNamespace(ctx *fiber.Ctx) error {
 		return err
 	}
 	if found != nil {
-		return newError(fiber.StatusConflict, errorCodeNamespaceNamespaceIDInUse, "namespace ID in use", nil)
+		return errorNamespaceNamespaceIDInUse
 	}
 
 	// Create a new token for the namespace
@@ -130,7 +128,7 @@ func EndpointPatchNamespace(ctx *fiber.Ctx) error {
 	// Try to parse the body into a request body struct
 	body := new(endpointPatchNamespaceRequestBody)
 	if err := ctx.BodyParser(body); err != nil {
-		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, "invalid request body", nil)
+		return errorGenericBadRequestBody
 	}
 
 	// Update the namespace accordingly

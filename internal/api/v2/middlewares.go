@@ -14,7 +14,7 @@ func MiddlewareAdminAuth(required bool) fiber.Handler {
 		header := strings.SplitN(ctx.Get(fiber.HeaderAuthorization), " ", 2)
 		if len(header) != 2 || header[0] != "Bearer" {
 			if required {
-				return newError(fiber.StatusUnauthorized, errorCodeGenericUnauthorized, "unauthorized", nil)
+				return errorGenericUnauthorized
 			}
 			ctx.Locals("_is_admin", false)
 			return ctx.Next()
@@ -29,7 +29,7 @@ func MiddlewareAdminAuth(required bool) fiber.Handler {
 			}
 		}
 		if required && !isAdmin {
-			return newError(fiber.StatusUnauthorized, errorCodeGenericUnauthorized, "unauthorized", nil)
+			return errorGenericUnauthorized
 		}
 		ctx.Locals("_is_admin", isAdmin)
 		return ctx.Next()
@@ -47,9 +47,9 @@ func MiddlewareInjectNamespace(handleAuth bool) fiber.Handler {
 		}
 		if namespace == nil {
 			if handleAuth && !ctx.Locals("_is_admin").(bool) {
-				return newError(fiber.StatusUnauthorized, errorCodeGenericUnauthorized, "unauthorized", nil)
+				return errorGenericUnauthorized
 			}
-			return newError(fiber.StatusNotFound, errorCodeGenericNamespaceNotFound, "namespace not found", nil)
+			return errorGenericNamespaceNotFound
 		}
 		ctx.Locals("_namespace", namespace)
 
@@ -58,13 +58,13 @@ func MiddlewareInjectNamespace(handleAuth bool) fiber.Handler {
 			// Read and parse the authorization header
 			header := strings.SplitN(ctx.Get(fiber.HeaderAuthorization), " ", 2)
 			if len(header) != 2 || header[0] != "Bearer" {
-				return newError(fiber.StatusUnauthorized, errorCodeGenericUnauthorized, "unauthorized", nil)
+				return errorGenericUnauthorized
 			}
 
 			// Compare the given authentication token with the one of the found namespace
 			namespace := ctx.Locals("_namespace").(*shared.Namespace)
 			if valid, _ := token.Check(namespace.Token, header[1]); !valid {
-				return newError(fiber.StatusUnauthorized, errorCodeGenericUnauthorized, "unauthorized", nil)
+				return errorGenericUnauthorized
 			}
 		}
 		return ctx.Next()
@@ -81,7 +81,7 @@ func MiddlewareInjectElement(ctx *fiber.Ctx) error {
 		return err
 	}
 	if element == nil {
-		return newError(fiber.StatusNotFound, errorCodeGenericElementNotFound, "element not found", nil)
+		return errorGenericElementNotFound
 	}
 	ctx.Locals("_element", element)
 	return ctx.Next()

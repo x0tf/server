@@ -124,12 +124,12 @@ func EndpointCreatePasteElement(ctx *fiber.Ctx) error {
 	// Try to parse the body into a request body struct
 	body := new(endpointCreatePasteElementRequestBody)
 	if err := ctx.BodyParser(body); err != nil {
-		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, "invalid request body", nil)
+		return errorGenericBadRequestBody
 	}
 
 	// Validate the content length
 	if len(body.Content) == 0 {
-		return newError(fiber.StatusBadRequest, errorCodeElementEmptyPasteContent, "empty paste content", nil)
+		return errorElementPasteEmptyPasteContent
 	}
 
 	// Validate the wished key if one was provided or generate a new one
@@ -141,7 +141,7 @@ func EndpointCreatePasteElement(ctx *fiber.Ctx) error {
 			return err
 		}
 		if found != nil {
-			return newError(fiber.StatusConflict, errorCodeElementElementKeyInUse, "element key in use", nil)
+			return errorElementElementKeyInUse
 		}
 		key = wishedKey
 	} else {
@@ -216,13 +216,13 @@ func EndpointCreateRedirectElement(ctx *fiber.Ctx) error {
 	// Try to parse the body into a request body struct
 	body := new(endpointCreateRedirectElementRequestBody)
 	if err := ctx.BodyParser(body); err != nil {
-		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, "invalid request body", nil)
+		return errorGenericBadRequestBody
 	}
 
 	// Validate the target URL
 	parsedURL, err := url.Parse(body.TargetURL)
 	if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") || parsedURL.Host == "" {
-		return newError(fiber.StatusBadRequest, errorCodeElementInvalidTargetURL, "invalid target URL", nil)
+		return errorElementRedirectInvalidTargetURL
 	}
 
 	// Validate the wished key if one was provided or generate a new one
@@ -234,7 +234,7 @@ func EndpointCreateRedirectElement(ctx *fiber.Ctx) error {
 			return err
 		}
 		if found != nil {
-			return newError(fiber.StatusConflict, errorCodeElementElementKeyInUse, "element key in use", nil)
+			return errorElementElementKeyInUse
 		}
 		key = wishedKey
 	} else {

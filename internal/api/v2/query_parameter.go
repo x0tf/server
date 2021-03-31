@@ -13,11 +13,7 @@ func parseQueryInt(ctx *fiber.Ctx, name string, defaultVale int) (int, error) {
 	}
 	parsed, err := strconv.Atoi(value)
 	if err != nil {
-		return 0, newError(fiber.StatusBadRequest, errorCodeGenericBadQueryParameter, "bad query parameter", fiber.Map{
-			"name":         name,
-			"given":        value,
-			"desired_type": "int",
-		})
+		return 0, errorGenericBadQueryParameter(name, value, "int")
 	}
 	return parsed, nil
 }
