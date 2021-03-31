@@ -13,4 +13,5 @@ const (
 
 	errorCodeElementElementKeyInUse   = 3000
 	errorCodeElementEmptyPasteContent = 3001
+	errorCodeElementInvalidTargetURL  = 3002
 )

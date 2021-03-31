@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/x0tf/server/internal/shared"
 	"github.com/x0tf/server/internal/utils"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -183,6 +184,99 @@ func EndpointCreatePasteElement(ctx *fiber.Ctx) error {
 		InternalData: map[string]interface{}{},
 		PublicData: map[string]interface{}{
 			"content": body.Content,
+		},
+		Views:      0,
+		MaxViews:   maxViews,
+		ValidFrom:  validFrom,
+		ValidUntil: validUntil,
+		Created:    time.Now().Unix(),
+	}
+	if err := elements.CreateOrReplace(element); err != nil {
+		return err
+	}
+	return ctx.Status(fiber.StatusCreated).JSON(element)
+}
+
+type endpointCreateRedirectElementRequestBody struct {
+	Key        *string `json:"key" xml:"key" form:"key"`
+	MaxViews   *int    `json:"max_views" xml:"max_views" form:"max_views"`
+	ValidFrom  *int64  `json:"valid_from" xml:"valid_from" form:"valid_from"`
+	ValidUntil *int64  `json:"valid_until" xml:"valid_until" form:"valid_until"`
+	TargetURL  string  `json:"target_url" xml:"target_url" form:"target_url"`
+}
+
+// EndpointCreateRedirectElement handles the 'POST /v2/elements/:namespace_id/redirect' endpoint
+func EndpointCreateRedirectElement(ctx *fiber.Ctx) error {
+	// Extract required services
+	elements := ctx.Locals("__services_elements").(shared.ElementService)
+
+	// Extract required resources
+	namespace := ctx.Locals("_namespace").(*shared.Namespace)
+
+	// Try to parse the body into a request body struct
+	body := new(endpointCreateRedirectElementRequestBody)
+	if err := ctx.BodyParser(body); err != nil {
+		return newError(fiber.StatusBadRequest, errorCodeGenericBadRequestBody, "invalid request body", nil)
+	}
+
+	// Validate the target URL
+	parsedURL, err := url.Parse(body.TargetURL)
+	if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") || parsedURL.Host == "" {
+		return newError(fiber.StatusBadRequest, errorCodeElementInvalidTargetURL, "invalid target URL", nil)
+	}
+
+	// Validate the wished key if one was provided or generate a new one
+	var key string
+	if body.Key != nil {
+		wishedKey := strings.ToLower(strings.TrimSpace(*body.Key))
+		found, err := elements.Element(namespace.ID, wishedKey)
+		if err != nil {
+			return err
+		}
+		if found != nil {
+			return newError(fiber.StatusConflict, errorCodeElementElementKeyInUse, "element key in use", nil)
+		}
+		key = wishedKey
+	} else {
+		for {
+			generated := utils.GenerateElementKey()
+			found, err := elements.Element(namespace.ID, generated)
+			if err != nil {
+				return err
+			}
+			if found == nil {
+				key = generated
+				break
+			}
+		}
+	}
+
+	// Define the maximum amount of views
+	maxViews := -1
+	if body.MaxViews != nil {
+		maxViews = *body.MaxViews
+	}
+
+	// Define the timestamp when the element should become valid
+	validFrom := int64(-1)
+	if body.ValidFrom != nil {
+		validFrom = *body.ValidFrom
+	}
+
+	// Define the timestamp when the element should expire
+	validUntil := int64(-1)
+	if body.ValidUntil != nil {
+		validUntil = *body.ValidUntil
+	}
+
+	// Create and respond with the element
+	element := &shared.Element{
+		Namespace:    namespace.ID,
+		Key:          key,
+		Type:         shared.ElementTypeRedirect,
+		InternalData: map[string]interface{}{},
+		PublicData: map[string]interface{}{
+			"target_url": parsedURL.String(),
 		},
 		Views:      0,
 		MaxViews:   maxViews,
