@@ -76,7 +76,7 @@ func MiddlewareInjectElement(ctx *fiber.Ctx) error {
 	// Retrieve and inject the requested element
 	elements := ctx.Locals("__services_elements").(shared.ElementService)
 	namespace := ctx.Locals("_namespace").(*shared.Namespace)
-	element, err := elements.Element(namespace.ID, strings.ToLower(ctx.Params("element_id")))
+	element, err := elements.Element(namespace.ID, strings.ToLower(ctx.Params("element_key")))
 	if err != nil {
 		return err
 	}

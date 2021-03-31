@@ -110,9 +110,10 @@ func (api *API) Serve() error {
 
 		v2group.Get("/elements", v2.MiddlewareAdminAuth(true), v2.EndpointGetElements)
 		v2group.Get("/elements/:namespace_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointGetNamespaceElements)
-		v2group.Get("/elements/:namespace_id/:element_id", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.MiddlewareInjectElement, v2.EndpointGetElement)
+		v2group.Get("/elements/:namespace_id/:element_key", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.MiddlewareInjectElement, v2.EndpointGetElement)
 		v2group.Post("/elements/:namespace_id/paste", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointCreatePasteElement)
 		v2group.Post("/elements/:namespace_id/redirect", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.EndpointCreateRedirectElement)
+		v2group.Patch("/elements/:namespace_id/:element_key", v2.MiddlewareAdminAuth(false), v2.MiddlewareInjectNamespace(true), v2.MiddlewareInjectElement, v2.EndpointPatchElement)
 	}
 
 	log.WithField("address", api.Settings.Address).Info("Serving the REST API")

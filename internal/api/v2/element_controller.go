@@ -98,7 +98,7 @@ func EndpointGetNamespaceElements(ctx *fiber.Ctx) error {
 	})
 }
 
-// EndpointGetElement handles the 'GET /v2/elements/:namespace_id/:element_id' endpoint
+// EndpointGetElement handles the 'GET /v2/elements/:namespace_id/:element_key' endpoint
 func EndpointGetElement(ctx *fiber.Ctx) error {
 	element := *(ctx.Locals("_element").(*shared.Element))
 	element.InternalData = map[string]interface{}{}
@@ -288,4 +288,68 @@ func EndpointCreateRedirectElement(ctx *fiber.Ctx) error {
 		return err
 	}
 	return ctx.Status(fiber.StatusCreated).JSON(element)
+}
+
+type endpointPatchElementRequestBody struct {
+	Key        *string `json:"key" xml:"key" form:"key"`
+	MaxViews   *int    `json:"max_views" xml:"max_views" form:"max_views"`
+	ValidFrom  *int64  `json:"valid_from" xml:"valid_from" form:"valid_from"`
+	ValidUntil *int64  `json:"valid_until" xml:"valid_until" form:"valid_until"`
+}
+
+// EndpointPatchElement handles the 'PATCH /v2/elements/:namespace_id/:element_key' endpoint
+func EndpointPatchElement(ctx *fiber.Ctx) error {
+	// Extract required services
+	elements := ctx.Locals("__services_elements").(shared.ElementService)
+
+	// Extract required resources
+	element := ctx.Locals("_element").(*shared.Element)
+
+	// Try to parse the body into a request body struct
+	body := new(endpointPatchElementRequestBody)
+	if err := ctx.BodyParser(body); err != nil {
+		return errorGenericBadRequestBody
+	}
+
+	// Validate and update the key of the element if specified
+	key := element.Key
+	if body.Key != nil {
+		key = strings.ToLower(strings.TrimSpace(*body.Key))
+		found, err := elements.Element(element.Namespace, key)
+		if err != nil {
+			return err
+		}
+		if found != nil {
+			return errorElementElementKeyInUse
+		}
+	}
+
+	// Update the maximum amount of views if specified
+	if body.MaxViews != nil {
+		element.MaxViews = *body.MaxViews
+	}
+
+	// Update the timestamp when the element should become valid if specified
+	if body.ValidFrom != nil {
+		element.ValidFrom = *body.ValidUntil
+	}
+
+	// Update the timestamp when the element should expire if specified
+	if body.ValidUntil != nil {
+		element.ValidUntil = *body.ValidUntil
+	}
+
+	// Update the element and respond with the updated version of it
+	if key != element.Key {
+		if err := elements.Delete(element.Namespace, element.Key); err != nil {
+			return err
+		}
+		element.Key = key
+	}
+	if err := elements.CreateOrReplace(element); err != nil {
+		return err
+	}
+	copy := *element
+	copy.InternalData = map[string]interface{}{}
+	return ctx.JSON(copy)
 }
