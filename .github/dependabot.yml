@@ -1,0 +1,19 @@
+version: 2
+updates:
+- package-ecosystem: gomod
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  target-branch: develop
+  reviewers:
+  - lus
+  assignees:
+  - lus
+  ignore:
+  - dependency-name: github.com/gofiber/fiber/v2
+    versions:
+    - 2.7.1
+  - dependency-name: github.com/jackc/pgx/v4
+    versions:
+    - 4.11.0
